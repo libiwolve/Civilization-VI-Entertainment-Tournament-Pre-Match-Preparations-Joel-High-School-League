@@ -1306,6 +1306,9 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             if (team === 'A') this.picksA.push(leader);
             else this.picksB.push(leader);
         },
+        canPick() {
+            return this.picksA.length + this.picksB.length < 6;
+        },
         toggleBanPhase1(leader, pool) {
             if (this.banPhase !== 1) return;
             const list = this.banned[pool];
