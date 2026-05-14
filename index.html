@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文明6 高校娱乐赛 · 乔尔赛制</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif; margin: 0; padding: 0; }
+        body { background: #1a1e2a; color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        #app { width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .splash {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: radial-gradient(ellipse at center, #1e2a3a 0%, #0f131f 100%);
+            z-index: 1000; cursor: pointer;
+            transition: opacity 0.8s ease;
+        }
+        .splash.hidden { opacity: 0; pointer-events: none; }
+        .splash h1 {
+            font-size: 4rem; font-weight: 700;
+            background: linear-gradient(135deg, #e8c87a, #c9a84c, #8a6e2a);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 60px rgba(200, 168, 76, 0.3);
+            margin-bottom: 20px; letter-spacing: 6px;
+        }
+        .splash .subtitle {
+            font-size: 1.4rem; color: #8a9ab5; letter-spacing: 8px;
+            margin-bottom: 50px;
+        }
+        .splash .enter-btn {
+            background: transparent; border: 2px solid #c9a84c; color: #c9a84c;
+            padding: 16px 60px; border-radius: 50px; font-size: 1.3rem;
+            cursor: pointer; transition: all 0.3s; font-weight: 600; letter-spacing: 4px;
+        }
+        .splash .enter-btn:hover { background: #c9a84c; color: #1a1e2a; box-shadow: 0 0 30px rgba(200, 168, 76, 0.4); }
+        .splash .badges { display: flex; gap: 20px; margin-bottom: 40px; }
+        .splash .badges span {
+            background: rgba(74, 111, 165, 0.2); border: 1px solid #4a6fa5;
+            padding: 6px 18px; border-radius: 30px; font-size: 0.9rem; color: #8a9ab5;
+        }
+
+        .container { max-width: 1400px; width: 100%; margin: 0 auto; padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .progress-bar { display: flex; gap: 4px; margin-bottom: 30px; padding: 10px 0; }
+        .progress-step { flex: 1; height: 6px; border-radius: 3px; background: #2f3547; transition: background 0.4s; }
+        .progress-step.active { background: #c9a84c; }
+        .progress-step.done { background: #4a6fa5; }
+
+        .step-container { background: #2a2f3f; border-radius: 20px; padding: 30px 35px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); flex: 1; }
+        .step-title { font-size: 1.8rem; border-bottom: 2px solid #4a6fa5; padding-bottom: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+        .step-title .step-num { background: #4a6fa5; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .nav-buttons { display: flex; gap: 15px; margin-top: 30px; justify-content: space-between; }
+        .nav-buttons .left { display: flex; gap: 10px; }
+        .nav-buttons .right { display: flex; gap: 10px; }
+
+        .btn { background: #4a6fa5; border: none; color: white; padding: 12px 28px; border-radius: 40px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; letter-spacing: 1px; }
+        .btn:hover { background: #5f8bc9; transform: scale(1.02); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-gold { background: #c9a84c; color: #1a1e2a; }
+        .btn-gold:hover { background: #e0c060; }
+        .btn-muted-red { background: #8a4a4a; }
+        .btn-muted-red:hover { background: #a06060; }
+        .btn-muted-blue { background: #4a6a8a; }
+        .btn-muted-blue:hover { background: #5a7a9a; }
+        .btn-green { background: #3a8a5a; }
+        .btn-green:hover { background: #4caa6e; }
+        .btn-sm { padding: 8px 18px; font-size: 0.9rem; }
+        .card { background: #323849; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        .map-pick-area { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .map-preview { max-width: 600px; width: 100%; border-radius: 12px; border: 2px solid #4a6fa5; overflow: hidden; transition: all 0.4s; }
+        .map-preview img { width: 100%; height: auto; display: block; }
+        .map-preview .placeholder { height: 200px; display: flex; align-items: center; justify-content: center; background: #1e2535; color: #5a6a8a; font-size: 1.1rem; }
+
+        .team-cards { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 10px; }
+        .team-card { flex: 1; min-width: 200px; padding: 20px; border-radius: 16px; border: 2px solid; transition: 0.3s; }
+        .team-card.team-red { background: #3a2a2a; border-color: #b85454; }
+        .team-card.team-blue { background: #1a2a3a; border-color: #4a6f9a; }
+        .team-card h3 { font-size: 1.3rem; margin-bottom: 8px; }
+        .team-card .picks { color: #8a9ab5; font-size: 0.95rem; }
+
+        .leader-list { max-height: 450px; overflow-y: auto; padding-right: 5px; }
+        .leader-list::-webkit-scrollbar { width: 6px; }
+        .leader-list::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .leader-list::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .leader-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #3f4658; cursor: pointer; position: relative; border-radius: 8px; transition: 0.2s; }
+        .leader-item:hover { background: #3a4055; }
+        .leader-item.banned { text-decoration: line-through; color: #ff7a7a; background: #3a2020; }
+        .leader-item .ban-check { width: 18px; height: 18px; cursor: pointer; accent-color: #b85454; }
+
+        .leader-item .tooltip {
+            visibility: hidden; opacity: 0;
+            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 9999; pointer-events: none;
+            background: #1a1f2e; border: 2px solid #c9a84c; border-radius: 14px;
+            padding: 22px; width: 420px; max-width: 90vw;
+            font-size: 0.92rem; line-height: 1.7;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8), 0 0 80px rgba(200,168,76,0.15);
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .leader-item .tooltip .civ-name { color: #c9a84c; font-size: 1.2rem; font-weight: 700; display: block; margin-bottom: 6px; }
+        .leader-item .tooltip .ability-label { color: #8a9ab5; font-size: 0.82rem; margin-top: 10px; font-weight: 600; letter-spacing: 1px; }
+        .leader-item .tooltip .ability-text { color: #d0d8e8; }
+        .leader-item:hover .tooltip { visibility: visible; opacity: 1; }
+        /* semi-transparent overlay when tooltip shows */
+        .leader-item:hover::after {
+            content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            z-index: 9998; pointer-events: none;
+        }
+
+        .map-layout { display: flex; gap: 24px; min-height: 500px; }
+        .point-sidebar { display: flex; flex-direction: column; gap: 8px; width: 80px; flex-shrink: 0; }
+        .point-btn { background: #3a3f55; border: 1px solid #5a6a8a; color: white; padding: 14px 0; border-radius: 40px; cursor: pointer; text-align: center; transition: 0.3s; font-weight: bold; font-size: 1rem; }
+        .point-btn:hover { background: #4a6fa5; }
+        .point-btn.active { background: #c9a84c; color: #1a1e2a; border-color: #c9a84c; }
+        .point-detail { position: relative; }
+        .point-detail .detail-panel { visibility: hidden; opacity: 0; position: absolute; left: 100%; top: 0; margin-left: 12px; background: #1a1f2e; border: 1px solid #4a6fa5; padding: 15px; border-radius: 12px; width: 220px; z-index: 50; transition: 0.3s; }
+        .point-detail:hover .detail-panel { visibility: visible; opacity: 1; }
+        .point-detail .detail-panel img { max-width: 100%; border-radius: 6px; margin: 4px 0; }
+        .point-detail .detail-panel .label { color: #8a9ab5; font-size: 0.85rem; margin-top: 6px; }
+        .map-display { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .map-display img { max-width: 100%; max-height: 500px; border-radius: 12px; border: 2px solid #4a6fa5; object-fit: contain; }
+        .map-toggle { display: flex; gap: 10px; margin-bottom: 12px; }
+        .map-toggle button { background: #3a3f55; border: 1px solid #5a6a8a; color: white; padding: 6px 20px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+        .map-toggle button.active { background: #4a6fa5; }
+
+        
+
+        .ban-header { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .ban-badge { background: #8a4a4a; padding: 6px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; }
+        .city-state-section { margin-top: 20px; }
+        .city-state-section .cs-list { max-height: 300px; overflow-y: auto; background: #1a1f2e; padding: 15px; border-radius: 12px; }
+        .city-state-section .cs-list::-webkit-scrollbar { width: 6px; }
+        .city-state-section .cs-list::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .city-state-section .cs-list::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .cs-item { margin-bottom: 10px; border-bottom: 1px solid #2f3547; padding-bottom: 10px; }
+        .cs-item .cs-name { color: #c9a84c; font-weight: 600; }
+        .cs-item .cs-type { color: #8a9ab5; font-size: 0.85rem; }
+        .cs-item .cs-bonus { color: #b0b8c8; font-size: 0.9rem; margin-top: 4px; line-height: 1.5; }
+        .timer-area { text-align: center; margin: 20px 0; }
+        .timer-area .timer-display { font-size: 3rem; font-weight: 700; letter-spacing: 4px; color: #c9a84c; font-family: 'Courier New', monospace; }
+        .timer-area .timer-display.warning { color: #e06060; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .draft-slot { border: 2px solid #3f4658; border-radius: 14px; margin-bottom: 10px; padding: 14px 20px; background: #252a3a; transition: all 0.3s; position: relative; }
+        .draft-slot.slot-a { border-left: 5px solid #b85454; }
+        .draft-slot.slot-b { border-left: 5px solid #4a6f9a; }
+        .draft-slot.slot-current { border-color: #c9a84c; box-shadow: 0 0 20px rgba(200,168,76,0.2); background: #2a2f3f; }
+        .draft-slot.slot-filled { opacity: 0.85; }
+        .draft-slot.slot-filled.slot-a { background: #2a1e1e; border-color: #8a3a3a; }
+        .draft-slot.slot-filled.slot-b { background: #1a2230; border-color: #3a5a7a; }
+        .draft-slot-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .draft-order { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; background: #3f4658; flex-shrink: 0; }
+        .slot-a .draft-order { background: #b85454; color: white; }
+        .slot-b .draft-order { background: #4a6f9a; color: white; }
+        .draft-team { font-weight: 600; font-size: 1.05rem; flex: 1; }
+        .draft-status { color: #8a9ab5; font-size: 0.9rem; }
+        .draft-status.pending { color: #c9a84c; font-weight: 600; }
+        .draft-status.waiting { color: #5a6a7a; }
+        .draft-dropdown { margin-top: 12px; border-top: 1px solid #3f4658; padding-top: 12px; max-height: 250px; overflow-y: auto; animation: slideDown 0.2s ease; }
+        .draft-dropdown::-webkit-scrollbar { width: 6px; }
+        .draft-dropdown::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .draft-dropdown::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 250px; } }
+        .dropdown-header { color: #8a9ab5; font-size: 0.85rem; margin-bottom: 8px; }
+        .dropdown-list { display: flex; flex-direction: column; gap: 4px; }
+        .dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: 0.15s; border: 1px solid transparent; }
+        .dropdown-item:hover { background: #3a4055; border-color: #4a6fa5; }
+        .dropdown-item .leader-pool-tag { font-size: 0.75rem; color: #6a7a8a; background: #1e2535; padding: 2px 10px; border-radius: 12px; }
+        .dropdown-empty { color: #5a6a7a; text-align: center; padding: 20px; }
+        /* ===== BAN 两轮制状态栏 ===== */
+        .ban-status-bar { display: flex; align-items: center; gap: 12px; background: #1e2535; border-radius: 14px; padding: 16px 20px; flex-wrap: wrap; }
+        .ban-phase { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 30px; background: #2f3547; font-size: 0.9rem; transition: 0.3s; }
+        .ban-phase.active { background: #3a4055; box-shadow: 0 0 12px rgba(74,111,165,0.3); }
+        .ban-phase.done { background: #2a4a3a; }
+        .ban-phase .phase-num { width: 24px; height: 24px; border-radius: 50%; background: #4a6fa5; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+        .ban-phase.done .phase-num { background: #3a8a5a; }
+        .ban-phase .phase-label { font-weight: 600; }
+        .ban-phase .phase-count { color: #c9a84c; font-weight: 600; }
+        .ban-phase .phase-check { color: #3a8a5a; font-weight: bold; font-size: 1.1rem; }
+        .ban-arrow { color: #4a6fa5; font-size: 1.3rem; }
+        .point-detail-area { width: 220px; flex-shrink: 0; background: #1e2535; border-radius: 14px; padding: 16px; border: 1px solid #4a6fa5; }
+        .point-detail-title { color: #c9a84c; font-weight: 600; font-size: 1rem; margin-bottom: 12px; text-align: center; }
+        .point-images { display: flex; flex-direction: column; gap: 10px; }
+        .point-img-card { background: #2f3547; border-radius: 10px; padding: 8px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .point-img-card:hover { border-color: #c9a84c; transform: scale(1.03); }
+        .point-img-card .img-label { font-size: 0.8rem; color: #8a9ab5; margin-bottom: 4px; }
+        .point-img-card img { width: 100%; border-radius: 6px; display: block; }
+        .image-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; cursor: pointer; animation: fadeIn 0.2s ease; }
+        .image-modal img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; border: 2px solid #4a6fa5; cursor: default; box-shadow: 0 0 60px rgba(0,0,0,0.5); }
+        .image-modal .image-modal-close { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; cursor: pointer; opacity: 0.7; transition: 0.2s; line-height: 1; }
+        .image-modal .image-modal-close:hover { opacity: 1; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .point-detail-panel { width: 240px; flex-shrink: 0; background: #1e2535; border-radius: 14px; padding: 16px; border: 1px solid #4a6fa5; }
+        .point-detail-panel.empty { display:flex; align-items:center; justify-content:center; min-height:200px; }
+        .pd-title { color: #c9a84c; font-weight: 600; font-size: 1rem; margin-bottom: 12px; text-align: center; }
+        .pd-images { display: flex; flex-direction: column; gap: 10px; }
+        .pd-img-card { background: #2f3547; border-radius: 10px; padding: 8px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .pd-img-card:hover { border-color: #c9a84c; transform: scale(1.03); }
+        .pd-label { font-size: 0.8rem; color: #8a9ab5; margin-bottom: 4px; }
+        .pd-img-card img { width: 100%; border-radius: 6px; display: block; }
+        .image-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; cursor: pointer; animation: fadeIn 0.2s ease; }
+        .image-modal img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; border: 2px solid #4a6fa5; cursor: default; box-shadow: 0 0 60px rgba(0,0,0,0.5); }
+        .im-close { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; cursor: pointer; opacity: 0.7; transition: 0.2s; line-height: 1; }
+        .im-close:hover { opacity: 1; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ===== 三列选人布局 ===== */
+        .pick-3col { display: flex; gap: 16px; align-items: flex-start; }
+        .pick-pool-col { flex: 1; min-width: 0; background: #222838; border-radius: 14px; padding: 12px; border: 1px solid #3f4658; }
+        .pool-col-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid #3f4658; margin-bottom: 8px; font-weight: 600; }
+        .pool-badge { background: #4a6fa5; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }
+        .pool-col-list { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+        .pool-col-list::-webkit-scrollbar { width: 5px; }
+        .pool-col-list::-webkit-scrollbar-track { background: #1a1f2e; border-radius: 3px; }
+        .pool-col-list::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .pool-leader-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 10px; border-radius: 8px; margin-bottom: 3px;
+            transition: 0.2s; border: 1px solid transparent; cursor: default;
+        }
+        .pool-leader-item.clickable { cursor: pointer; }
+        .pool-leader-item.clickable:hover { background: #3a4055; border-color: #c9a84c; transform: translateX(3px); }
+        .pool-leader-item.banned { opacity: 0.35; text-decoration: line-through; color: #ff7a7a; }
+        .pool-leader-item.picked { opacity: 0.55; }
+        .pool-leader-item .leader-name { font-size: 0.9rem; }
+        .pool-leader-item .leader-status { font-size: 0.75rem; font-weight: 600; }
+        .pool-leader-item .leader-status.picked { color: #3a8a5a; }
+        .pool-leader-item .leader-turn-hint { font-size: 0.75rem; color: #c9a84c; font-weight: 600; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .pick-slots-col { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+        .pick-center-slot { border: 2px solid #3f4658; border-radius: 12px; padding: 10px 14px; background: #1e2535; transition: 0.3s; }
+        .pick-center-slot.slot-a-border { border-left: 5px solid #b85454; }
+        .pick-center-slot.slot-b-border { border-left: 5px solid #4a6f9a; }
+        .pick-center-slot.slot-current { border-color: #c9a84c; box-shadow: 0 0 16px rgba(200,168,76,0.25); background: #252c3e; }
+        .slot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.85rem; }
+        .slot-order { font-weight: 700; font-size: 0.9rem; color: #8a9ab5; }
+        .slot-team { font-weight: 600; font-size: 0.9rem; flex: 1; }
+        .slot-turn { font-size: 0.75rem; color: #5a6a7a; }
+        .slot-display { font-size: 0.9rem; }
+        .slot-filled-name { color: #c9a84c; font-weight: 500; }
+        .slot-waiting { color: #5a6a7a; font-size: 0.85rem; }
+        .slot-waiting.active { color: #c9a84c; font-weight: 600; animation: blink 1s infinite; }
+
+        @media (max-width: 1000px) { .pick-3col { flex-direction: column; } .pick-slots-col { width: 100%; } }
+        @media (max-width: 900px) {
+            .splash h1 { font-size: 2.5rem; }
+            .map-layout { flex-direction: column; height: auto; }
+            .point-sidebar { flex-direction: row; width: 100%; overflow-x: auto; }
+            .point-detail .detail-panel { position: static; width: 100%; margin: 10px 0 0 0; }
+            .grid-2 { grid-template-columns: 1fr; }
+            
+            .leader-item .tooltip { left: 0; top: 100%; width: 280px; }
+            .step-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div class="splash" :class="{ hidden: !showSplash }" @click="showSplash = false">
+        <h1>🌍 文明6 · 高校娱乐赛</h1>
+        <p class="subtitle">乔尔赛制 · 线下娱乐</p>
+        <div class="badges">
+            <span>6大领袖池</span>
+            <span>54张地图</span>
+            <span>AB双队对抗</span>
+        </div>
+        <button class="enter-btn" @click.stop="showSplash = false">点击开始</button>
+    </div>
+
+    <div class="container" v-if="!showSplash">
+        <div class="progress-bar">
+            <div v-for="n in 5" :key="n" class="progress-step" :class="{ active: currentStep === n, done: currentStep > n }"></div>
+        </div>
+
+        <!-- 步骤1 -->
+        <div class="step-container" v-if="currentStep === 1">
+            <div class="step-title"><span class="step-num">1</span>随机地图</div>
+            <div class="map-pick-area">
+                <button class="btn btn-gold" @click="randomMap" style="font-size:1.2rem;padding:16px 40px;">🎲 抽取地图 (1-54)</button>
+                <div v-if="mapId" style="text-align:center;width:100%;">
+                    <div style="font-size:1.4rem;background:#1e2535;padding:10px 30px;border-radius:40px;display:inline-block;margin-bottom:16px;">📍 地图 #{{ mapId }} : {{ mapName }}</div>
+                    <div class="map-preview">
+                        <img v-if="mapData.mapUrl" :src="mapData.mapUrl" :alt="mapName + '预览图'">
+                        <div v-else class="placeholder">暂无预览图</div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <div class="left"></div>
+                <div class="right">
+                    <button class="btn" @click="randomMap">🎲 重新抽取</button>
+                    <button class="btn btn-gold" :disabled="!mapId" @click="goStep(2)">下一步 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤2 -->
+        <div class="step-container" v-if="currentStep === 2">
+            <div class="step-title"><span class="step-num">2</span>红蓝队伍 → A/B 分配</div>
+            <p style="color:#8a9ab5;margin-bottom:16px;">线下两队分别选择 <strong style="color:#b85454;">红色</strong> 和 <strong style="color:#4a6f9a;">蓝色</strong>，系统将随机分配 A队(1/4/5位) 和 B队(2/3/6位)</p>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <button class="btn btn-gold" @click="assignTeams" style="font-size:1.1rem;padding:14px 36px;">🎲 随机分配</button>
+            </div>
+            <div v-if="teamA" class="team-cards" style="margin-top:20px;">
+                <div class="team-card" :class="teamA.color === '红' ? 'team-red' : 'team-blue'">
+                    <h3>{{ teamA.name }} — <span :style="{ color: teamA.color === '红' ? '#b85454' : '#4a6f9a' }">{{ teamA.color }}色</span></h3>
+                    <div class="picks">选人位次：<strong>{{ teamA.picks.join(', ') }}</strong></div>
+                </div>
+                <div class="team-card" :class="teamB.color === '红' ? 'team-red' : 'team-blue'">
+                    <h3>{{ teamB.name }} — <span :style="{ color: teamB.color === '红' ? '#b85454' : '#4a6f9a' }">{{ teamB.color }}色</span></h3>
+                    <div class="picks">选人位次：<strong>{{ teamB.picks.join(', ') }}</strong></div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <div class="left"><button class="btn btn-sm" @click="goStep(1)">← 上一步</button></div>
+                <div class="right">
+                    <button class="btn" @click="assignTeams">🎲 重新分配</button>
+                    <button class="btn btn-gold" :disabled="!teamA" @click="goStep(3)">下一步 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤3 -->
+        <div class="step-container" v-if="currentStep === 3">
+            <div class="step-title"><span class="step-num">3</span>领袖池抽取</div>
+            <p style="color:#8a9ab5;margin-bottom:16px;">从6大领袖池中随机抽取2个池子，鼠标悬浮可查看领袖详细信息</p>
+            <button class="btn btn-gold" @click="randomPools" style="font-size:1.1rem;padding:14px 36px;margin-bottom:20px;">🎲 抽取两个领袖池</button>
+            <div v-if="pool1 && pool2" class="grid-2">
+                <div class="card">
+                    <h3 style="color:#c9a84c;margin-bottom:12px;">池1：{{ pool1.name }}</h3>
+                    <div class="leader-list">
+                        <div v-for="leader in pool1.leaders" :key="leader" class="leader-item" :class="{ banned: isBanned(leader) }">
+                            <span>{{ leader }}</span>
+                            <div class="tooltip" v-if="leaderData[leader]">
+                                <div class="civ-name">{{ leaderData[leader].civilization }}</div>
+                                <div class="ability-label">🏛️ 国家能力</div>
+                                <div class="ability-text">{{ leaderData[leader].civAbility }}</div>
+                                <div class="ability-label">👑 领袖特殊能力</div>
+                                <div class="ability-text">{{ leaderData[leader].leaderAbility }}</div>
+                            </div>
+                            <div class="tooltip" v-else><div class="civ-name">{{ leader }}</div><div class="ability-label" style="color:#666;">暂无详细数据</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="color:#c9a84c;margin-bottom:12px;">池2：{{ pool2.name }}</h3>
+                    <div class="leader-list">
+                        <div v-for="leader in pool2.leaders" :key="leader" class="leader-item" :class="{ banned: isBanned(leader) }">
+                            <span>{{ leader }}</span>
+                            <div class="tooltip" v-if="leaderData[leader]">
+                                <div class="civ-name">{{ leaderData[leader].civilization }}</div>
+                                <div class="ability-label">🏛️ 国家能力</div>
+                                <div class="ability-text">{{ leaderData[leader].civAbility }}</div>
+                                <div class="ability-label">👑 领袖特殊能力</div>
+                                <div class="ability-text">{{ leaderData[leader].leaderAbility }}</div>
+                            </div>
+                            <div class="tooltip" v-else><div class="civ-name">{{ leader }}</div><div class="ability-label" style="color:#666;">暂无详细数据</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <div class="left"><button class="btn btn-sm" @click="goStep(2)">← 上一步</button></div>
+                <div class="right">
+                    <button class="btn" @click="randomPools">🎲 重新抽取</button>
+                    <button class="btn btn-gold" :disabled="!pool1" @click="goStep(4)">下一步 →</button>
+                </div>
+            </div>
+        </div>
+
+            <!-- 步骤4：两轮BAN -->
+        <div class="step-container" v-if="currentStep === 4">
+            <div class="step-title"><span class="step-num">4</span>BAN领袖 &middot; 两轮制</div>
+            <div v-if="pool1 && pool2">
+                <div class="ban-status-bar">
+                    <div class="ban-phase" :class="{ active: banPhase === 1, done: banPhase > 1 }">
+                        <span class="phase-num">1</span>
+                        <span class="phase-label">{{ teamA ? teamA.name : 'A队' }} BAN</span>
+                        <span class="phase-count" v-if="banPhase === 1">{{ bannedList.length }} / {{ banCount }}</span>
+                        <span class="phase-check" v-if="banPhase > 1">&#10003;</span>
+                    </div>
+                    <div class="ban-arrow">&#8594;</div>
+                    <div class="ban-phase" :class="{ active: banPhase === 2, done: banPhase > 2 }">
+                        <span class="phase-num">2</span>
+                        <span class="phase-label">{{ teamB ? teamB.name : 'B队' }} BAN</span>
+                        <span class="phase-count" v-if="banPhase === 2">{{ banned2List.length }} / {{ banCount }}</span>
+                        <span class="phase-check" v-if="banPhase > 2">&#10003;</span>
+                    </div>
+                    <div class="ban-arrow">&#8594;</div>
+                    <div class="ban-phase" :class="{ active: banPhase === 3 }">
+                        <span class="phase-num">3</span>
+                        <span class="phase-label">完成</span>
+                    </div>
+                </div>
+                <!-- 阶段1：A队BAN -->
+                <div v-if="banPhase === 1" style="margin-top:16px;">
+                    <div class="ban-header" style="border-left:4px solid #b85454;padding-left:14px;margin-bottom:12px;">
+                        <h3 style="color:#b85454;margin:0;">&#128308; {{ teamA ? teamA.name : 'A队' }} BAN阶段</h3>
+                        <span style="color:#8a9ab5;font-size:0.9rem;">请从下方选择 <strong>{{ banCount }}</strong> 个领袖BAN掉</span>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card"><h4 style="color:#c9a84c;margin-bottom:10px;">{{ pool1.name }}</h4>
+                            <div class="leader-list">
+                                <div v-for="leader in pool1.leaders" :key="leader"
+                                     class="leader-item" :class="{ banned: banned.pool1.includes(leader) }"
+                                     @click="toggleBanPhase1(leader, 'pool1')">
+                                    <input type="checkbox" class="ban-check" :checked="banned.pool1.includes(leader)" @click.stop="toggleBanPhase1(leader, 'pool1')">
+                                    <span>{{ leader }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card"><h4 style="color:#c9a84c;margin-bottom:10px;">{{ pool2.name }}</h4>
+                            <div class="leader-list">
+                                <div v-for="leader in pool2.leaders" :key="leader"
+                                     class="leader-item" :class="{ banned: banned.pool2.includes(leader) }"
+                                     @click="toggleBanPhase1(leader, 'pool2')">
+                                    <input type="checkbox" class="ban-check" :checked="banned.pool2.includes(leader)" @click.stop="toggleBanPhase1(leader, 'pool2')">
+                                    <span>{{ leader }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;text-align:center;">
+                        <button class="btn btn-muted-red" :disabled="bannedList.length !== banCount" @click="confirmBanPhase1">
+                            确认A队BAN（{{ bannedList.length }} / {{ banCount }}）
+                        </button>
+                    </div>
+                </div>
+                <!-- 阶段2：B队BAN -->
+                <div v-if="banPhase === 2" style="margin-top:16px;">
+                    <div class="ban-header" style="border-left:4px solid #4a6f9a;padding-left:14px;margin-bottom:12px;">
+                        <h3 style="color:#4a6f9a;margin:0;">&#128309; {{ teamB ? teamB.name : 'B队' }} BAN阶段</h3>
+                        <span style="color:#8a9ab5;font-size:0.9rem;">从下方全部领袖中选择 <strong>{{ banCount }}</strong> 个BAN掉</span>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card"><h4 style="color:#c9a84c;margin-bottom:10px;">{{ pool1.name }}</h4>
+                            <div class="leader-list">
+                                <div v-for="leader in pool1.leaders" :key="leader"
+                                     class="leader-item" :class="{ banned: banned2.pool1.includes(leader) }"
+                                     @click="toggleBanPhase2(leader, 'pool1')">
+                                    <input type="checkbox" class="ban-check"
+                                           :checked="banned2.pool1.includes(leader)" @click.stop="toggleBanPhase2(leader, 'pool1')">
+                                    <span>{{ leader }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card"><h4 style="color:#c9a84c;margin-bottom:10px;">{{ pool2.name }}</h4>
+                            <div class="leader-list">
+                                <div v-for="leader in pool2.leaders" :key="leader"
+                                     class="leader-item" :class="{ banned: banned2.pool2.includes(leader) }"
+                                     @click="toggleBanPhase2(leader, 'pool2')">
+                                    <input type="checkbox" class="ban-check"
+                                           :checked="banned2.pool2.includes(leader)" @click.stop="toggleBanPhase2(leader, 'pool2')">
+                                    <span>{{ leader }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;text-align:center;">
+                        <button class="btn btn-muted-blue" :disabled="banned2List.length !== banCount" @click="confirmBanPhase2">
+                            确认B队BAN（{{ banned2List.length }} / {{ banCount }}）
+                        </button>
+                    </div>
+                </div>
+                <!-- 阶段3：完成 -->
+                <div v-if="banPhase === 3" style="text-align:center;padding:20px;margin-top:10px;">
+                    <div style="font-size:1.5rem;color:#c9a84c;font-weight:bold;">&#10003; BAN选完成</div>
+                    <div style="color:#8a9ab5;font-size:0.9rem;margin-top:4px;">
+                        A队 BAN了 {{ bannedList.length }} 个，B队 BAN了 {{ banned2List.length }} 个，共 {{ bannedList.length + banned2List.length }} 个领袖被移除
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <div class="left"><button class="btn btn-sm" @click="goStep(3)">&#8592; 上一步</button></div>
+                <div class="right"><button class="btn btn-gold" :disabled="banPhase < 3" @click="goStep(5)">下一步 &#8594;</button></div>
+            </div>
+        </div><!-- 步骤5 -->
+        <div class="step-container" v-if="currentStep === 5">
+            <div class="step-title"><span class="step-num">5</span>地图详情 &amp; 选人环节</div>
+            <div v-if="mapId" class="map-layout" style="margin-bottom:24px;">
+                <div class="point-sidebar">
+                    <div v-for="p in ['A1','A2','A3','A4','A5']" :key="p">
+                        <button class="point-btn" :class="{ active: selectedPoint === p }" @click="selectPoint(p)">{{ p }}</button>
+                    </div>
+                </div>
+                <div class="point-detail-panel" v-if="selectedPoint && mapData[selectedPoint]">
+                    <div class="pd-title">&#128204; {{ selectedPoint }} 详情</div>
+                    <div class="pd-images">
+                        <div class="pd-img-card" @click="openImageViewer(mapData[selectedPoint].charm)">
+                            <div class="pd-label">&#127800; 魅力</div>
+                            <img :src="mapData[selectedPoint].charm">
+                        </div>
+                        <div class="pd-img-card" @click="openImageViewer(mapData[selectedPoint].continent)">
+                            <div class="pd-label">&#127757; 大陆</div>
+                            <img :src="mapData[selectedPoint].continent">
+                        </div>
+                        <div class="pd-img-card" @click="openImageViewer(mapData[selectedPoint].resource)">
+                            <div class="pd-label">&#9971;&#65039; 资源</div>
+                            <img :src="mapData[selectedPoint].resource">
+                        </div>
+                    </div>
+                </div>
+                <div class="point-detail-panel empty" v-else-if="selectedPoint">
+                    <div style="text-align:center;color:#5a6a7a;padding:20px;">暂无该点位图片数据</div>
+                </div>
+                <div class="map-display">
+                    <div class="map-toggle">
+                        <button :class="{ active: mapView === 'overview' }" @click="mapView = 'overview'">总览图</button>
+                        <button :class="{ active: mapView === 'points' }" @click="mapView = 'points'">点位图</button>
+                    </div>
+                    <img :src="mapView === 'overview' ? mapData.mapUrl : mapData.pointUrl" :alt="mapView === 'overview' ? '总览' : '点位'">
+                </div>
+            </div>
+            <div class="image-modal" v-if="imageViewerSrc" @click="imageViewerSrc = ''">
+                <span class="im-close">&times;</span>
+                <img :src="imageViewerSrc" @click.stop>
+            </div>
+            <div class="pick-phase" v-if="pool1 && pool2 && teamA">
+                <h3 style="border-bottom:2px solid #4a6fa5;padding-bottom:10px;margin-bottom:20px;">
+                    &#x2694;&#xfe0f; 选人环节
+                    <span style="font-size:0.9rem;color:#8a9ab5;font-weight:normal;margin-left:12px;">
+                        顺序 1(A) &#x2192; 2(B) &#x2192; 3(B) &#x2192; 4(A) &#x2192; 5(A) &#x2192; 6(B)
+                    </span>
+                    <span style="font-size:0.9rem;color:#c9a84c;font-weight:normal;margin-left:12px;">
+                        已选 {{ picksA.length + picksB.length }} / 6
+                    </span>
+                </h3>
+
+                <div class="pick-3col">
+                    <!-- 左侧：池1 -->
+                    <div class="pick-pool-col">
+                        <div class="pool-col-header">
+                            <span class="pool-badge">池1</span>
+                            <span>{{ pool1.name }}</span>
+                        </div>
+                        <div class="pool-col-list">
+                            <div v-for="leader in pool1.leaders" :key="leader"
+                                 class="pool-leader-item"
+                                 :class="{
+                                     'banned': isBanned(leader),
+                                     'picked': isPicked(leader),
+                                     'clickable': !isBanned(leader) && !isPicked(leader) && canPick()
+                                 }"
+                                 @click="pickFromPool(leader)">
+                                <span class="leader-name">{{ leader }}</span>
+                                <span class="leader-status" v-if="isBanned(leader)">&#x274c; BAN</span>
+                                <span class="leader-status picked" v-else-if="isPicked(leader)">&#x2705;</span>
+                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446; 选</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中间：6层槽位 -->
+                    <div class="pick-slots-col">
+                        <div v-for="(slot, idx) in draftSlots" :key="idx"
+                             :class="[
+                                 'pick-center-slot',
+                                 slot.team === 'A' ? 'slot-a-border' : 'slot-b-border',
+                                 { 'slot-current': idx === currentPickIndex && picksA.length + picksB.length < 6 }
+                             ]">
+                            <div class="slot-header">
+                                <span class="slot-order">#{{ idx + 1 }}</span>
+                                <span class="slot-team" :style="{ color: slot.team === 'A' ? '#b85454' : '#4a6f9a' }">
+                                    {{ slot.team === 'A' ? teamA.name : teamB.name }}
+                                </span>
+                                <span class="slot-turn">位次{{ slot.turn }}</span>
+                            </div>
+                            <div class="slot-display">
+                                <template v-if="slot.filled">
+                                    <span class="slot-filled-name">&#x2705; {{ slot.leader }}</span>
+                                </template>
+                                <template v-else-if="idx === currentPickIndex && picksA.length + picksB.length < 6">
+                                    <span class="slot-waiting active">&#x2b07; 点击两侧领袖选人</span>
+                                </template>
+                                <template v-else>
+                                    <span class="slot-waiting">&#x23f3; 等待</span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：池2 -->
+                    <div class="pick-pool-col">
+                        <div class="pool-col-header">
+                            <span class="pool-badge">池2</span>
+                            <span>{{ pool2.name }}</span>
+                        </div>
+                        <div class="pool-col-list">
+                            <div v-for="leader in pool2.leaders" :key="leader"
+                                 class="pool-leader-item"
+                                 :class="{
+                                     'banned': isBanned(leader),
+                                     'picked': isPicked(leader),
+                                     'clickable': !isBanned(leader) && !isPicked(leader) && canPick()
+                                 }"
+                                 @click="pickFromPool(leader)">
+                                <span class="leader-name">{{ leader }}</span>
+                                <span class="leader-status" v-if="isBanned(leader)">&#x274c; BAN</span>
+                                <span class="leader-status picked" v-else-if="isPicked(leader)">&#x2705;</span>
+                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446; 选</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计时器 -->
+                <div style="margin-top:20px;padding-top:16px;border-top:1px solid #3f4658;">
+                    <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+                        <button class="btn btn-green" @click="startTimer" :disabled="timerRunning">
+                            &#x23f1;&#xfe0f; {{ timerRunning ? '计时中...' : '开始计时 (15分钟)' }}
+                        </button>
+                        <div class="timer-display" :class="{ warning: timeLeft <= 120 }">{{ formatTime }}</div>
+                        <button class="btn btn-sm" @click="resetPicks">&#x1f504; 重置选人</button>
+                    </div>
+                </div>
+
+                <!-- 选人结果 -->
+                <div v-if="picksA.length + picksB.length === 6" style="text-align:center;margin-top:16px;">
+                    <div style="font-size:1.5rem;color:#c9a84c;font-weight:bold;">&#x1f389; 选人完毕！</div>
+                    <div style="display:flex;gap:40px;justify-content:center;margin-top:12px;">
+                        <div>
+                            <strong :style="{ color: teamA.color === '红' ? '#b85454' : '#4a6f9a' }">{{ teamA.name }}</strong>：
+                            {{ picksA.join(' · ') }}
+                        </div>
+                        <div>
+                            <strong :style="{ color: teamB.color === '红' ? '#b85454' : '#4a6f9a' }">{{ teamB.name }}</strong>：
+                            {{ picksB.join(' · ') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div             <div class="city-state-section">
+                <h3 style="border-bottom:2px solid #4a6fa5;padding-bottom:10px;margin-bottom:16px;">
+                    &#x1f3db️ 本局城邦
+                    <span style="font-size:0.9rem;color:#8a9ab5;font-weight:normal;margin-left:10px;">
+                        （地图 #{{ mapId }} {{ mapName }} 专属）
+                    </span>
+                </h3>
+                <div class="cs-list" v-if="mapCityStates.length > 0">
+                    <div v-for="(cs, idx) in mapCityStates" :key="idx" class="cs-item">
+                        <div><span class="cs-name">{{ cs }}</span> <span class="cs-type">（{{ cityStateData[cs] ? cityStateData[cs].type : '未知' }}）</span></div>
+                        <div class="cs-bonus">{{ cityStateData[cs] ? cityStateData[cs].bonus : '暂无数据' }}</div>
+                    </div>
+                </div>
+                <div v-else style="padding:20px;text-align:center;color:#5a6a7a;">
+                    该地图暂未绑定城邦数据（可在 MAP_DATA 的 cityStates 中配置）
+                </div>
+            </div>class="nav-buttons">
+                <div class="left"><button class="btn btn-sm" @click="goStep(4)">← 上一步</button></div>
+                <div class="right"><button class="btn btn-sm" @click="resetAll">🔄 重新开始</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
+
+<script>
+const LEADER_POOLS = {
+    '非洲大洋洲': ['努比亚','埃及(佩特拉)','埃及(拉美西斯二世)','刚果(姆本巴·恩津加)','刚果(恩津加·姆班德)','马里(曼沙·穆萨)','马里(松迪亚塔·凯塔)','埃塞俄比亚','刚果','澳大利亚','毛利','祖鲁'],
+    '美洲': ['玛雅','阿兹特克','印加','克里','马普切','美国(罗斯福)','美国(林肯)','加拿大','大哥伦比亚','巴西'],
+    '西北欧': ['埃莉诺','高卢','西班牙','挪威','法国','瑞典','苏格兰','葡萄牙','荷兰','英国(维多利亚)','英国(伊丽莎白)'],
+    '中东欧': ['俄罗斯','波兰','德国(巴巴罗萨)','德国(路德维希二世)','匈牙利','希腊(伯利克里)','希腊(戈尔戈)','马其顿','拜占庭(巴兹尔二世)','拜占庭(狄奥多拉)','罗马(图拉真)','罗马(凯撒)'],
+    '中东': ['腓尼基','苏美尔','巴比伦','奥斯曼','波斯(居鲁士)','波斯(纳迪尔沙阿)','阿拉伯','格鲁吉亚','斯基泰'],
+    '东亚': ['中国(秦始皇)','中国(武则天)','中国(朱棣)','忽必烈','朝鲜(善德)','朝鲜(世宗大王)','印度(甘地)','印度(旃陀罗笈多)','印度尼西亚','越南','高棉','日本(北条时宗)','日本(德川家康)','成吉思汗']
+};
+
+const LEADER_DATA = {
+    '努比亚': { civilization:'努比亚', civAbility:'塔塞提：所有区域生产力需求降低，矿产资源提供额外产出。', leaderAbility:'阿曼尼托尔(女王)：建造者可在沙漠单元格建造金字塔改良设施，获得科技值加成。' },
+    '埃及(佩特拉)': { civilization:'埃及', civAbility:'地中海航行：贸易路线额外提供金币，所有单位沿河流移动速度提升。', leaderAbility:'佩特拉(女法老)：区域和奇观可以建在泛滥平原上，建造者使用次数+1。' },
+    '埃及(拉美西斯二世)': { civilization:'埃及', civAbility:'地中海航行：贸易路线额外提供金币，所有单位沿河流移动速度提升。', leaderAbility:'拉美西斯二世：建造奇观时+15%生产力，方尖碑提供额外文化值。' },
+    '刚果(姆本巴·恩津加)': { civilization:'刚果', civAbility:'恩西比大：所有单位获得额外移动力，森林和雨林单元格提供文化和科技值。', leaderAbility:'姆本巴·恩津加：建造者可在雨林单元格上建造特殊改良设施。' },
+    '刚果(恩津加·姆班德)': { civilization:'刚果', civAbility:'恩西比大：所有单位获得额外移动力，森林和雨林单元格提供文化和科技值。', leaderAbility:'恩津加·姆班德：无法建造圣地，但每个遗物提供+4信仰、+4金币、+4文化。' },
+    '马里(曼沙·穆萨)': { civilization:'马里', civAbility:'撒哈拉商人：国际商路提供额外金币，矿山建造成本降低但产出减少。', leaderAbility:'曼沙·穆萨(朝圣之旅)：每次完成贸易路线获得信仰值，购买建筑和单位时可用信仰折抵金币。' },
+    '马里(松迪亚塔·凯塔)': { civilization:'马里', civAbility:'撒哈拉商人：国际商路提供额外金币，矿山建造成本降低但产出减少。', leaderAbility:'松迪亚塔·凯塔：每个区域若与商业中心相邻则提供额外金币。' },
+    '埃塞俄比亚': { civilization:'埃塞俄比亚', civAbility:'阿克苏姆遗产：丘陵单元格提供额外文化值，拥有丰富的文化遗产。', leaderAbility:'孟尼利克二世：击败敌方单位时获得信仰值，科技值基于信仰产出增加。' },
+    '刚果': { civilization:'刚果', civAbility:'恩西比大：所有单位获得额外移动力，森林和雨林单元格提供文化和科技值。', leaderAbility:'刚果(通用)：城市无法建造圣地，但每个遗物提供大量文化和金币。' },
+    '澳大利亚': { civilization:'澳大利亚', civAbility:'南方大陆：沿海单元格提供额外科技值，与海洋相邻的城区额外产出。', leaderAbility:'约翰·柯廷：当被宣战时所有城市+100%生产力，在海岸单元格上战斗力提升。' },
+    '毛利': { civilization:'毛利', civAbility:'玛纳：游戏开始时获得造船技术，森林单元格产出翻倍，无法伐木或收获资源。', leaderAbility:'库佩：所有单位在海洋单元格上获得额外移动力，发现自然奇观时获得额外加成。' },
+    '祖鲁': { civilization:'祖鲁', civAbility:'伊西潘多：军营区建筑提供更高的大将军点数，军团和军队战斗力大幅提升。', leaderAbility:'恰卡(牛之盾)：击败敌方单位可获得该单位转换为自己的军团，军事单位经验获取提升。' },
+    '玛雅': { civilization:'玛雅', civAbility:'穆尔：首都周围6格内城区获得额外科技值和文化值，远离首都的城市产出降低。', leaderAbility:'淑女六日：科技值基于信仰值产出提升，获得特殊的投矛手单位。' },
+    '阿兹特克': { civilization:'阿兹特克', civAbility:'五太阳纪：建造者可以建设区域花费降低，建造者使用次数+1。', leaderAbility:'蒙特祖玛一世：每个奢侈资源为军队提供+1战斗力，奢华资源改良后获得额外宜居度。' },
+    '印加': { civilization:'印加', civAbility:'米塔：建造者可在山脉单元格上建造隧道，丘陵单元格提供食物加成。', leaderAbility:'帕查库蒂：所有单位无视地形移动惩罚，市政树研究完成后获得额外科技值。' },
+    '克里': { civilization:'克里', civAbility:'伍德兰克里人：侦察兵在森林/沼泽中视野增强，贸易路线额外金币。', leaderAbility:'庞德梅克：所有贸易路线提供额外文化值，击败野蛮人营地后获得额外金币。' },
+    '马普切': { civilization:'马普切', civAbility:'托奇：击败敌方单位时降低对方城市忠诚度，获得独特的马普切战士。', leaderAbility:'莱塔罗·兰格伦：对拥有不同政体的文明作战时+5战斗力，独立城邦使节增加速度翻倍。' },
+    '美国(罗斯福)': { civilization:'美国', civAbility:'开国元勋：所有外交政策槽位变为万能槽位，购买地块花费-50%。', leaderAbility:'西奥多·罗斯福：在首都所在大陆上战斗力+5，拥有国家公园的城市获得额外忠诚度。' },
+    '美国(林肯)': { civilization:'美国', civAbility:'开国元勋：所有外交政策槽位变为万能槽位，购买地块花费-50%。', leaderAbility:'亚伯拉罕·林肯：建造工业区时获得免费单位，工业区建筑提供额外忠诚度。' },
+    '加拿大': { civilization:'加拿大', civAbility:'北方领土：无法向其他文明宣战(也不被圣战)，冻土单元格提供额外产出。', leaderAbility:'威尔弗里德·劳雷尔：所有国际商路提供文化值，冻土上的国家公园提供更多旅游业绩。' },
+    '大哥伦比亚': { civilization:'大哥伦比亚', civAbility:'大本营：所有军事单位+1移动力，获得额外的大将军点数。', leaderAbility:'西蒙·玻利瓦尔：大将军单位提供额外加成，每个晋升的军事单位提供科技值。' },
+    '巴西': { civilization:'巴西', civAbility:'亚马逊河：雨林单元格提供额外科技值，获得更多伟人点数。', leaderAbility:'佩德罗二世：招募或创造伟人后返还20%消耗的伟人点数。' },
+    '埃莉诺': { civilization:'英国/法国(双文明)', civAbility:'安茹家族：根据所选文明获得英国或法国能力。', leaderAbility:'宫廷爱情：所有巨作提供额外忠诚度压力，每回合降低附近外国城市的忠诚度。' },
+    '高卢': { civilization:'高卢', civAbility:'哈尔施塔特：矿山提供文化值，矿区相邻加成翻倍，获得独特的采矿科技。', leaderAbility:'安比奥里克斯：击败敌方单位时获得科技值，高卢剑士战斗力提升。' },
+    '西班牙': { civilization:'西班牙', civAbility:'黄金舰队：贸易路线跨越大洋时提供额外金币，征服者单位战斗力提升。', leaderAbility:'菲利普二世：宗教法庭审判官额外+1使用次数，传教士战斗力+5。' },
+    '挪威': { civilization:'挪威', civAbility:'龙船长：所有海军单位获得额外移动力，早期可进行海洋航行。', leaderAbility:'哈拉尔德·哈德拉达：海战单位可对陆地单元格发起攻击，击败海军单位获得金币。' },
+    '法国': { civilization:'法国', civAbility:'大革命：所有城区获得额外文化值，间谍在中期游戏后获得额外升级。', leaderAbility:'凯瑟琳·德·美第奇：获得额外的间谍，通过使节获得额外科技值和文化值。' },
+    '瑞典': { civilization:'瑞典', civAbility:'诺贝尔奖：每三种不同类型的城区提供1个伟人点数，获得独特的诺贝尔奖主题建筑。', leaderAbility:'克里斯蒂娜女王：所有拥有巨作的建筑提供额外科技值和文化值，市政研究速度提升。' },
+    '苏格兰': { civilization:'苏格兰', civAbility:'苏格兰启蒙运动：高宜居度城市获得额外科技值和生产力的加成。', leaderAbility:'罗伯特·布鲁斯：处于防御战争时所有单位战斗力+7，建造工业区时获得额外大将军点数。' },
+    '葡萄牙': { civilization:'葡萄牙', civAbility:'葡萄牙海洋帝国：建造船坞时获得免费海军单位，贸易路线根据距离获得额外金币。', leaderAbility:'约翰三世：与其他文明的贸易路线提供额外科技值，获得建造造船厂的能力。' },
+    '荷兰': { civilization:'荷兰', civAbility:'低地国家：与河流相邻时所有城区获得额外文化值，改良泛滥平原获得额外加成。', leaderAbility:'威廉明娜：贸易路线提供额外忠诚度，每条贸易路线提供1文化值。' },
+    '英国(维多利亚)': { civilization:'英国', civAbility:'大英博物馆：每座城市获得额外的考古学家名额，在外国大陆上建造区域时获得额外产出。', leaderAbility:'维多利亚(新时代)：获得建造红衫军的独特能力，在适合大陆上的城市获得免费近战单位。' },
+    '英国(伊丽莎白)': { civilization:'英国', civAbility:'大英博物馆：每座城市获得额外的考古学家名额，在外国大陆上建造区域时获得额外产出。', leaderAbility:'伊丽莎白一世：海军私掠船战斗力+5，探索时代获得额外的海军统帅点数。' },
+    '俄罗斯': { civilization:'俄罗斯', civAbility:'母俄罗斯：占领的土地比正常多8格，冻土单元格提供额外生产力。', leaderAbility:'彼得大帝：国际商路根据目的地的科技水平提供科技值和文化值。' },
+    '波兰': { civilization:'波兰', civAbility:'金色自由：获得免费的军事政策槽位，城墙建造速度提升。', leaderAbility:'雅德维加：使节可转化为圣物，获得额外的信仰值产出。' },
+    '德国(巴巴罗萨)': { civilization:'德国', civAbility:'帝国自由城市：可多建造一个区域(每座城市)，工业区获得额外加成。', leaderAbility:'巴巴罗萨(神圣罗马皇帝)：与城邦进行战斗时获得额外战斗力，征服城邦时获得额外加成。' },
+    '德国(路德维希二世)': { civilization:'德国', civAbility:'帝国自由城市：可多建造一个区域(每座城市)，工业区获得额外加成。', leaderAbility:'路德维希二世(童话国王)：建造奇观速度+15%，所有奇观提供额外的文化值和旅游业绩。' },
+    '匈牙利': { civilization:'匈牙利', civAbility:'多瑙河明珠：沿河的城市获得额外文化值，利用使节强化区域建筑。', leaderAbility:'马加什一世：使节购买军队时享受折扣，将城邦军队纳入自己的指挥体系。' },
+    '希腊(伯利克里)': { civilization:'希腊', civAbility:'柏拉图理想国：获得额外的通配符政策槽位，继承政府遗产加成。', leaderAbility:'伯利克里：每个使节的城邦提供额外的文化值，外交影响力获得提升。' },
+    '希腊(戈尔戈)': { civilization:'希腊', civAbility:'柏拉图理想国：获得额外的通配符政策槽位，继承政府遗产加成。', leaderAbility:'戈尔戈(女王)：击败敌方单位时获得文化值，拥有强大的重装步兵。' },
+    '马其顿': { civilization:'马其顿', civAbility:'腓力二世：所有单位无视城墙伤害，攻克城市时恢复所有单位生命值。', leaderAbility:'亚历山大：攻克城市时获得大将军点数和大工程师点数，所有单位升级花费减半。' },
+    '拜占庭(巴兹尔二世)': { civilization:'拜占庭', civAbility:'希腊之火：海军单位获得特殊焚烧能力，与信仰相关的特殊加成。', leaderAbility:'巴兹尔二世(保加利亚屠夫)：每转化一个城市获得军队加成，宗教单位战斗力+10。' },
+    '拜占庭(狄奥多拉)': { civilization:'拜占庭', civAbility:'希腊之火：海军单位获得特殊焚烧能力，与信仰相关的特殊加成。', leaderAbility:'狄奥多拉(皇后)：所有区域的相邻加成基于信仰值获得额外产出。' },
+    '罗马(图拉真)': { civilization:'罗马', civAbility:'条条大路通罗马：所有城市自动获得道路连接，贸易路线额外提供金币。', leaderAbility:'图拉真：所有新创建的城市获得免费建筑，军事单位战斗力提升。' },
+    '罗马(凯撒)': { civilization:'罗马', civAbility:'条条大路通罗马：所有城市自动获得道路连接，贸易路线额外提供金币。', leaderAbility:'尤利乌斯·凯撒：击败敌方单位时获得金币，每占领一座城市获得额外的大将军点数。' },
+    '腓尼基': { civilization:'腓尼基', civAbility:'迦太基的建立：沿海城市获得额外忠诚度，可以在水域单元格上建造市中心。', leaderAbility:'狄多：建造港口时获得免费的船长单位，额外贸易路线容量+1。' },
+    '苏美尔': { civilization:'苏美尔', civAbility:'文明摇篮：所有单位沿河流移动不受阻碍，击败野蛮人营地获得额外加成。', leaderAbility:'吉尔伽美什：与城邦结盟时获得额外军事力量加成，与盟友并肩作战时共享战斗经验。' },
+    '巴比伦': { civilization:'巴比伦', civAbility:'智慧的摇篮：完成特殊区域可获得超越时代的科技值加成，拥有独特的早期科技优势。', leaderAbility:'汉谟拉比：科技树研究速度大幅降低，但每回合自动获得特定科技的加成。' },
+    '奥斯曼': { civilization:'奥斯曼', civAbility:'大维齐尔：军费维护成本降低，海军单位获得额外战斗力。', leaderAbility:'苏莱曼一世：攻城单位战斗力+5，围攻城市时所有单位战斗力提升。' },
+    '波斯(居鲁士)': { civilization:'波斯', civAbility:'波斯大道：贸易路线根据距离提供额外文化值，内部商路提供额外金币。', leaderAbility:'居鲁士大帝：当宣战时所有单位获得额外移动力和战斗力，持续10回合。' },
+    '波斯(纳迪尔沙阿)': { civilization:'波斯', civAbility:'波斯大道：贸易路线根据距离提供额外文化值，内部商路提供额外金币。', leaderAbility:'纳迪尔沙阿：每个改良的奢侈资源提供额外科技值和军事生产加成。' },
+    '阿拉伯': { civilization:'阿拉伯', civAbility:'智慧之城：科技值基于信仰值产生额外加成，获得独特的宗教建筑。', leaderAbility:'萨拉丁：与信仰相同的文明交战时战斗力+10，获得额外的先知点数。' },
+    '格鲁吉亚': { civilization:'格鲁吉亚', civAbility:'高大地母神：城墙建造速度提升，信仰值基于城墙防御等级获得加成。', leaderAbility:'塔玛尔女王：黄金时代中所有单位获得额外移动力和战斗力。' },
+    '斯基泰': { civilization:'斯基泰', civAbility:'草原民族：骑乘单位训练费用降低，轻骑兵单位战斗力提升。', leaderAbility:'托米丽司：击败敌方单位时恢复生命值，骑射单位获得额外攻击次数。' },
+    '中国(秦始皇)': { civilization:'中国', civAbility:'天下：建造者使用次数+1，建造者可以消耗次数加快奇观建设进度(15%)。', leaderAbility:'始皇帝：建造者可建造长城改良设施(提供文化和金币)，发动一次独特的能力。' },
+    '中国(武则天)': { civilization:'中国', civAbility:'天下：建造者使用次数+1，建造者可以消耗次数加快奇观建设进度(15%)。', leaderAbility:'武则天(则天皇帝)：间谍行动成功率+1级，获得额外间谍名额。' },
+    '中国(朱棣)': { civilization:'中国', civAbility:'天下：建造者使用次数+1，建造者可以消耗次数加快奇观建设进度(15%)。', leaderAbility:'朱棣(永乐大典)：所有巨作提供科技值，贸易路线提供额外文化值。' },
+    '忽必烈': { civilization:'蒙古/中国', civAbility:'蒙古帝国：骑乘单位在轻骑兵升级线上获得额外战斗力加成。', leaderAbility:'忽必烈：获得一个额外的经济政策槽位，击败敌方骑兵单位时获得科技值。' },
+    '朝鲜(善德)': { civilization:'朝鲜', civAbility:'三国时代：书院提供科技值加成，所有区域获得额外的相邻加成。', leaderAbility:'善德女王：获得独特区域"花郎"，侍从单位提供额外科技值和文化值。' },
+    '朝鲜(世宗大王)': { civilization:'朝鲜', civAbility:'三国时代：书院提供科技值加成，所有区域获得额外的相邻加成。', leaderAbility:'世宗大王：科技研究速度+10%，每个图书馆和大学提供额外的科技值。' },
+    '印度(甘地)': { civilization:'印度', civAbility:'非暴力不合作：宗教传播范围扩大，所有文明与印度交战时产生额外的厌战度。', leaderAbility:'圣雄甘地：每个宗教建筑提供额外文化值，在和平时期获得额外的伟人点数。' },
+    '印度(旃陀罗笈多)': { civilization:'印度', civAbility:'非暴力不合作：宗教传播范围扩大，所有文明与印度交战时产生额外的厌战度。', leaderAbility:'旃陀罗笈多：宣战后的战争借口更加容易满足，占领城市后获得额外加成。' },
+    '印度尼西亚': { civilization:'印度尼西亚', civAbility:'千岛之国：海岸和湖泊单元格上的区域获得额外文化值，信仰值也获得额外加成。', leaderAbility:'特里布瓦纳：建造沿海城市时获得免费海军单位，信仰值可购买独特的船舶单位。' },
+    '越南': { civilization:'越南', civAbility:'九龙江平原：森林、雨林和沼泽单元格上的区域获得额外文化值和科技值。', leaderAbility:'赵夫人(征侧)：在森林和雨林单元格上的战斗力+5，获胜后可获得额外文化值。' },
+    '高棉': { civilization:'高棉', civAbility:'吴哥窟：河流上的区域获得额外信仰值，获得独特的高棉改良设施。', leaderAbility:'阇耶跋摩七世：人口增长速率+15%，每座寺庙提供额外食物和信仰值。' },
+    '日本(北条时宗)': { civilization:'日本', civAbility:'明治维新：所有区域与相邻的核心区域获得额外加成，沿海城市额外产出。', leaderAbility:'北条时宗(神风)：使陆地战斗单位在沿海战斗中获得战斗力加成。' },
+    '日本(德川家康)': { civilization:'日本', civAbility:'明治维新：所有区域与相邻的核心区域获得额外加成，沿海城市额外产出。', leaderAbility:'德川家康：国内贸易路线提供额外文化值和科技值，内部发展速度提升。' },
+    '成吉思汗': { civilization:'蒙古', civAbility:'蒙古帝国：骑乘单位在轻骑兵升级线上获得额外战斗力加成。', leaderAbility:'成吉思汗：所有轻骑兵单位获得额外战斗力，击败敌方骑兵时有一定几率俘虏对方单位。' }
+};
+
+const CITY_STATE_DATA = {
+    '奥克兰 (Auckland)': { type:'工业', bonus:'公民工作的浅水单元格提供+1生产力。进入工业时代后额外再+1生产力。' },
+    '布鲁塞尔 (Brussels)': { type:'工业', bonus:'城市建造奇观时+15%生产力。' },
+    '布宜诺斯艾利斯 (Buenos Aires)': { type:'工业', bonus:'加成资源像奢侈品资源一样，每种提供1点宜居度。' },
+    '加的夫 (Cardiff)': { type:'工业', bonus:'城市每个港口建筑提供+2电力。' },
+    '香港 (Hong Kong)': { type:'工业', bonus:'城市项目+20%生产力。' },
+    '约翰内斯堡 (Johannesburg)': { type:'工业', bonus:'城市每拥有一种已改良的资源类型，便+1生产力。研究"工业化"科技后提升至+2生产力。' },
+    '墨西哥城 (Mexico City)': { type:'工业', bonus:'工业区、水上乐园和娱乐中心区域的区域效应范围扩大3格。' },
+    '新加坡 (Singapore)': { type:'工业', bonus:'城市每有一条通往其他文明（或外国文明）的贸易路线，便+2生产力。' },
+    '阿卡德 (Akkad)': { type:'军事', bonus:'近战和抗骑兵单位对城墙造成全额伤害。' },
+    '格拉纳达 (Granada)': { type:'军事', bonus:'建造者可建造阿尔卡萨改良设施，提供文化值，保护军事单位，并基于单元格魅力提供科技值。' },
+    '喀布尔 (Kabul)': { type:'军事', bonus:'你的单位从自己发起的战斗中获得双倍经验。' },
+    '拉合尔 (Lahore)': { type:'军事', bonus:'可用信仰值购买尼杭战士特色单位。' },
+    '纳札加姆 (Ngazargamu)': { type:'军事', bonus:'城市中每个军营区建筑使陆地战斗或支援单位购买费用降低20%。' },
+    '普雷斯拉夫 (Preslav)': { type:'军事', bonus:'城市每个军营区建筑提供+2忠诚度。' },
+    '瓦莱塔 (Valletta)': { type:'军事', bonus:'市中心建筑和军营区建筑可用信仰值购买。购买远古、中世纪和文艺复兴城墙的费用降低，但只能使用信仰值购买。' },
+    '沃林 (Wolin)': { type:'军事', bonus:'陆地单位击败敌方单位时获得大将军点数，海军单位击败敌方单位时获得海军统帅点数，点数等于对方战斗力的25%（标准速度下）。' },
+    '安善 (Anshan)': { type:'科技', bonus:'每份著作巨作+2科技值。每件遗物和文物+1科技值。' },
+    '博洛尼亚 (Bologna)': { type:'科技', bonus:'拥有建筑的城区提供+1对应类型的伟人点数。' },
+    '非斯 (Fez)': { type:'科技', bonus:'首次使用宗教单位转变一座城市时，该城市每点人口提供20点科技值（标准速度下）。' },
+    '日内瓦 (Geneva)': { type:'科技', bonus:'未与任何文明交战时，所有城市+15%科技值。' },
+    '哈图沙 (Hattusa)': { type:'科技', bonus:'提供你已揭露但未拥有的每种战略资源每回合2点。' },
+    '米特拉 (Mitla)': { type:'科技', bonus:'拥有学院的城市的城市人口增长速率+15%。' },
+    '那烂陀 (Nalanda)': { type:'科技', bonus:'建造者可建造大寺改良设施。该设施提供科技值、住房，与圣地和学院相邻时有额外加成。' },
+    '塔鲁加 (Taruga)': { type:'科技', bonus:'城市每种拥有的不同改良战略资源，使该城市+5%科技值。' },
+    '卡霍基亚 (Cahokia)': { type:'贸易', bonus:'建造者可建造卡霍基亚土墩改良设施，提供金币、住房和宜居度。' },
+    '罕萨 (Hunza)': { type:'贸易', bonus:'贸易路线每行进5个单元格，为您提供+1金币。' },
+    '斯里巴加湾 (Jakarta)': { type:'贸易', bonus:'您的贸易路线途径的国外贸易站，为该路线额外提供+1金币。' },
+    '摩加迪沙 (Mogadishu)': { type:'贸易', bonus:'你的商人单位在水域单元格上免疫掠夺。' },
+    '马斯喀特 (Muscat)': { type:'贸易', bonus:'拥有商业中心的城市+1宜居度。' },
+    '撒马尔罕 (Samarkand)': { type:'贸易', bonus:'建造者可建造圆顶市集改良设施，提供金币，且国际商路的起始城市每有1个圆顶市集，商路便+1金币。' },
+    '威尼斯 (Venice)': { type:'贸易', bonus:'通往国外城市的贸易路线，目的地每种奢侈资源额外提供+1金币。' },
+    '桑给巴尔 (Zanzibar)': { type:'贸易', bonus:'获得桂皮和丁香两种奢侈资源。它们无法通过其他方式获得，每种提供6点宜居度。' },
+    '塔那那利佛 (Antananarivo)': { type:'文化', bonus:'每获得一位伟人，文化值提升2%（最高可提升至30%）。' },
+    '阿瑜陀耶 (Ayutthaya)': { type:'文化', bonus:'完成建筑时，获得等同于建造成本10%的文化值。' },
+    '卡瓜纳 (Caguana)': { type:'文化', bonus:'建造者可建造巴特依改良设施，提供文化值和旅游业绩。' },
+    '库马西 (Kumasi)': { type:'文化', bonus:'通往任何城邦的贸易路线，根据起源城市的专业化区域数量，每个提供+2文化值和+1金币。' },
+    '摩亨朱达罗 (Mohenjo-Daro)': { type:'文化', bonus:'你的所有城市都如同建在河流旁一样，获得满额水源住房。' },
+    '南马都尔 (Nan Madol)': { type:'文化', bonus:'在海岸或湖泊单元格上或与之相邻的城区提供+2文化值。' },
+    '拉帕努伊 (Rapa Nui)': { type:'文化', bonus:'建造者可建造摩艾石像改良设施，该设施基于相邻的摩艾石像数量提供文化值，研究"飞行"科技后提供旅游业绩。' },
+    '塞缪尔 (Sam)': { type:'文化', bonus:'每个博物馆主题展览提供+2文化值。' },
+    '维尔纽斯 (Vilnius)': { type:'文化', bonus:'所有市政研究+15%科技值。' },
+    '阿尔马 (Armagh)': { type:'宗教', bonus:'如果该城邦信仰宗教，该城邦的宗教将存在遗物。' },
+    '康提 (Kandy)': { type:'宗教', bonus:'每发现一个自然奇观，获得一个遗物（最多3个）。' },
+    '拉文塔 (La Venta)': { type:'宗教', bonus:'建造者可建造巨石头像改良设施，提供信仰值。' },
+    '耶路撒冷 (Jerusalem)': { type:'宗教', bonus:'自动追随您创立的宗教，无需传教士的压力转化。' },
+    '纳斯卡 (Nazca)': { type:'宗教', bonus:'建造者可在沙漠上建造纳斯卡线条改良设施，提供信仰值、文化值。' },
+    '马六甲 (Malacca)': { type:'宗教', bonus:'每与一个城邦同盟，所有城市+3%信仰值产出。' },
+    '乌尔 (Ur)': { type:'宗教', bonus:'建成圣地区域的城市的贸易路线根据城市人口获得额外食物。' }
+};
+
+const MAP_DATA = {
+    1:{ name:'地中湖', mapUrl:'./maps/01_地中湖/地图.png', pointUrl:'./maps/01_地中湖/点位.png',
+        A1:{ charm:'./maps/01_地中湖/A1/魅力.png', continent:'./maps/01_地中湖/A1/大陆.png', resource:'./maps/01_地中湖/A1/资源.png' },
+        A2:{ charm:'./maps/01_地中湖/A2/魅力.png', continent:'./maps/01_地中湖/A2/大陆.png', resource:'./maps/01_地中湖/A2/资源.png' },
+        A3:{ charm:'./maps/01_地中湖/A3/魅力.png', continent:'./maps/01_地中湖/A3/大陆.png', resource:'./maps/01_地中湖/A3/资源.png' },
+        A4:{ charm:'./maps/01_地中湖/A4/魅力.png', continent:'./maps/01_地中湖/A4/大陆.png', resource:'./maps/01_地中湖/A4/资源.png' },
+        A5:{ charm:'./maps/01_地中湖/A5/魅力.png', continent:'./maps/01_地中湖/A5/大陆.png', resource:'./maps/01_地中湖/A5/资源.png' },
+        cityStates: ['康提 (Kandy)'] },
+    2:{ name:'五大湖', mapUrl:'./maps/02_五大湖/地图.png', pointUrl:'./maps/02_五大湖/点位.png',
+        A1:{ charm:'./maps/02_五大湖/A1/魅力.png', continent:'./maps/02_五大湖/A1/大陆.png', resource:'./maps/02_五大湖/A1/资源.png' },
+        A2:{ charm:'./maps/02_五大湖/A2/魅力.png', continent:'./maps/02_五大湖/A2/大陆.png', resource:'./maps/02_五大湖/A2/资源.png' },
+        A3:{ charm:'./maps/02_五大湖/A3/魅力.png', continent:'./maps/02_五大湖/A3/大陆.png', resource:'./maps/02_五大湖/A3/资源.png' },
+        A4:{ charm:'./maps/02_五大湖/A4/魅力.png', continent:'./maps/02_五大湖/A4/大陆.png', resource:'./maps/02_五大湖/A4/资源.png' },
+        A5:{ charm:'./maps/02_五大湖/A5/魅力.png', continent:'./maps/02_五大湖/A5/大陆.png', resource:'./maps/02_五大湖/A5/资源.png' },
+        cityStates: ['卡霍基亚 (Cahokia)'] },
+    3:{ name:'海路协同', mapUrl:'./maps/03_海路协同/地图.png', pointUrl:'./maps/03_海路协同/点位.png',
+        A1:{ charm:'./maps/03_海路协同/A1/魅力.png', continent:'./maps/03_海路协同/A1/大陆.png', resource:'./maps/03_海路协同/A1/资源.png' },
+        A2:{ charm:'./maps/03_海路协同/A2/魅力.png', continent:'./maps/03_海路协同/A2/大陆.png', resource:'./maps/03_海路协同/A2/资源.png' },
+        A3:{ charm:'./maps/03_海路协同/A3/魅力.png', continent:'./maps/03_海路协同/A3/大陆.png', resource:'./maps/03_海路协同/A3/资源.png' },
+        A4:{ charm:'./maps/03_海路协同/A4/魅力.png', continent:'./maps/03_海路协同/A4/大陆.png', resource:'./maps/03_海路协同/A4/资源.png' },
+        A5:{ charm:'./maps/03_海路协同/A5/魅力.png', continent:'./maps/03_海路协同/A5/大陆.png', resource:'./maps/03_海路协同/A5/资源.png' },
+        cityStates: [] },
+    4:{ name:'蒙德', mapUrl:'./maps/04_蒙德/地图.png', pointUrl:'./maps/04_蒙德/点位.png',
+        A1:{ charm:'./maps/04_蒙德/A1/魅力.png', continent:'./maps/04_蒙德/A1/大陆.png', resource:'./maps/04_蒙德/A1/资源.png' },
+        A2:{ charm:'./maps/04_蒙德/A2/魅力.png', continent:'./maps/04_蒙德/A2/大陆.png', resource:'./maps/04_蒙德/A2/资源.png' },
+        A3:{ charm:'./maps/04_蒙德/A3/魅力.png', continent:'./maps/04_蒙德/A3/大陆.png', resource:'./maps/04_蒙德/A3/资源.png' },
+        A4:{ charm:'./maps/04_蒙德/A4/魅力.png', continent:'./maps/04_蒙德/A4/大陆.png', resource:'./maps/04_蒙德/A4/资源.png' },
+        A5:{ charm:'./maps/04_蒙德/A5/魅力.png', continent:'./maps/04_蒙德/A5/大陆.png', resource:'./maps/04_蒙德/A5/资源.png' },
+        cityStates: [] },
+    5:{ name:'大陆与群岛', mapUrl:'./maps/05_大陆与群岛/地图.png', pointUrl:'./maps/05_大陆与群岛/点位.png',
+        A1:{ charm:'./maps/05_大陆与群岛/A1/魅力.png', continent:'./maps/05_大陆与群岛/A1/大陆.png', resource:'./maps/05_大陆与群岛/A1/资源.png' },
+        A2:{ charm:'./maps/05_大陆与群岛/A2/魅力.png', continent:'./maps/05_大陆与群岛/A2/大陆.png', resource:'./maps/05_大陆与群岛/A2/资源.png' },
+        A3:{ charm:'./maps/05_大陆与群岛/A3/魅力.png', continent:'./maps/05_大陆与群岛/A3/大陆.png', resource:'./maps/05_大陆与群岛/A3/资源.png' },
+        A4:{ charm:'./maps/05_大陆与群岛/A4/魅力.png', continent:'./maps/05_大陆与群岛/A4/大陆.png', resource:'./maps/05_大陆与群岛/A4/资源.png' },
+        A5:{ charm:'./maps/05_大陆与群岛/A5/魅力.png', continent:'./maps/05_大陆与群岛/A5/大陆.png', resource:'./maps/05_大陆与群岛/A5/资源.png' },
+        cityStates: [] },
+    6:{ name:'济南战役', mapUrl:'./maps/06_济南战役/地图.png', pointUrl:'./maps/06_济南战役/点位.png',
+        A1:{ charm:'./maps/06_济南战役/A1/魅力.png', continent:'./maps/06_济南战役/A1/大陆.png', resource:'./maps/06_济南战役/A1/资源.png' },
+        A2:{ charm:'./maps/06_济南战役/A2/魅力.png', continent:'./maps/06_济南战役/A2/大陆.png', resource:'./maps/06_济南战役/A2/资源.png' },
+        A3:{ charm:'./maps/06_济南战役/A3/魅力.png', continent:'./maps/06_济南战役/A3/大陆.png', resource:'./maps/06_济南战役/A3/资源.png' },
+        A4:{ charm:'./maps/06_济南战役/A4/魅力.png', continent:'./maps/06_济南战役/A4/大陆.png', resource:'./maps/06_济南战役/A4/资源.png' },
+        A5:{ charm:'./maps/06_济南战役/A5/魅力.png', continent:'./maps/06_济南战役/A5/大陆.png', resource:'./maps/06_济南战役/A5/资源.png' },
+        cityStates: [] },
+    7:{ name:'枫丹', mapUrl:'./maps/07_枫丹/地图.png', pointUrl:'./maps/07_枫丹/点位.png',
+        A1:{ charm:'./maps/07_枫丹/A1/魅力.png', continent:'./maps/07_枫丹/A1/大陆.png', resource:'./maps/07_枫丹/A1/资源.png' },
+        A2:{ charm:'./maps/07_枫丹/A2/魅力.png', continent:'./maps/07_枫丹/A2/大陆.png', resource:'./maps/07_枫丹/A2/资源.png' },
+        A3:{ charm:'./maps/07_枫丹/A3/魅力.png', continent:'./maps/07_枫丹/A3/大陆.png', resource:'./maps/07_枫丹/A3/资源.png' },
+        A4:{ charm:'./maps/07_枫丹/A4/魅力.png', continent:'./maps/07_枫丹/A4/大陆.png', resource:'./maps/07_枫丹/A4/资源.png' },
+        A5:{ charm:'./maps/07_枫丹/A5/魅力.png', continent:'./maps/07_枫丹/A5/大陆.png', resource:'./maps/07_枫丹/A5/资源.png' },
+        cityStates: [] },
+    8:{ name:'须弥', mapUrl:'./maps/08_须弥/地图.png', pointUrl:'./maps/08_须弥/点位.png',
+        A1:{ charm:'./maps/08_须弥/A1/魅力.png', continent:'./maps/08_须弥/A1/大陆.png', resource:'./maps/08_须弥/A1/资源.png' },
+        A2:{ charm:'./maps/08_须弥/A2/魅力.png', continent:'./maps/08_须弥/A2/大陆.png', resource:'./maps/08_须弥/A2/资源.png' },
+        A3:{ charm:'./maps/08_须弥/A3/魅力.png', continent:'./maps/08_须弥/A3/大陆.png', resource:'./maps/08_须弥/A3/资源.png' },
+        A4:{ charm:'./maps/08_须弥/A4/魅力.png', continent:'./maps/08_须弥/A4/大陆.png', resource:'./maps/08_须弥/A4/资源.png' },
+        A5:{ charm:'./maps/08_须弥/A5/魅力.png', continent:'./maps/08_须弥/A5/大陆.png', resource:'./maps/08_须弥/A5/资源.png' },
+        cityStates: [] },
+    9:{ name:'璃月', mapUrl:'./maps/09_璃月/地图.png', pointUrl:'./maps/09_璃月/点位.png',
+        A1:{ charm:'./maps/09_璃月/A1/魅力.png', continent:'./maps/09_璃月/A1/大陆.png', resource:'./maps/09_璃月/A1/资源.png' },
+        A2:{ charm:'./maps/09_璃月/A2/魅力.png', continent:'./maps/09_璃月/A2/大陆.png', resource:'./maps/09_璃月/A2/资源.png' },
+        A3:{ charm:'./maps/09_璃月/A3/魅力.png', continent:'./maps/09_璃月/A3/大陆.png', resource:'./maps/09_璃月/A3/资源.png' },
+        A4:{ charm:'./maps/09_璃月/A4/魅力.png', continent:'./maps/09_璃月/A4/大陆.png', resource:'./maps/09_璃月/A4/资源.png' },
+        A5:{ charm:'./maps/09_璃月/A5/魅力.png', continent:'./maps/09_璃月/A5/大陆.png', resource:'./maps/09_璃月/A5/资源.png' },
+        cityStates: [] },
+    10:{ name:'亚特兰蒂斯', mapUrl:'./maps/10_亚特兰蒂斯/地图.png', pointUrl:'./maps/10_亚特兰蒂斯/点位.png',
+        A1:{ charm:'./maps/10_亚特兰蒂斯/A1/魅力.png', continent:'./maps/10_亚特兰蒂斯/A1/大陆.png', resource:'./maps/10_亚特兰蒂斯/A1/资源.png' },
+        A2:{ charm:'./maps/10_亚特兰蒂斯/A2/魅力.png', continent:'./maps/10_亚特兰蒂斯/A2/大陆.png', resource:'./maps/10_亚特兰蒂斯/A2/资源.png' },
+        A3:{ charm:'./maps/10_亚特兰蒂斯/A3/魅力.png', continent:'./maps/10_亚特兰蒂斯/A3/大陆.png', resource:'./maps/10_亚特兰蒂斯/A3/资源.png' },
+        A4:{ charm:'./maps/10_亚特兰蒂斯/A4/魅力.png', continent:'./maps/10_亚特兰蒂斯/A4/大陆.png', resource:'./maps/10_亚特兰蒂斯/A4/资源.png' },
+        A5:{ charm:'./maps/10_亚特兰蒂斯/A5/魅力.png', continent:'./maps/10_亚特兰蒂斯/A5/大陆.png', resource:'./maps/10_亚特兰蒂斯/A5/资源.png' },
+        cityStates: [] },
+    11:{ name:'地图11', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    12:{ name:'地图12', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    13:{ name:'地图13', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    14:{ name:'地图14', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    15:{ name:'地图15', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    16:{ name:'地图16', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    17:{ name:'地图17', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    18:{ name:'地图18', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    19:{ name:'地图19', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    20:{ name:'地图20', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    21:{ name:'地图21', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    22:{ name:'地图22', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    23:{ name:'地图23', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    24:{ name:'地图24', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    25:{ name:'地图25', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    26:{ name:'地图26', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    27:{ name:'地图27', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    28:{ name:'地图28', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    29:{ name:'地图29', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    30:{ name:'地图30', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    31:{ name:'地图31', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    32:{ name:'地图32', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    33:{ name:'地图33', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    34:{ name:'地图34', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    35:{ name:'地图35', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    36:{ name:'地图36', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    37:{ name:'地图37', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    38:{ name:'地图38', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    39:{ name:'地图39', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    40:{ name:'地图40', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    41:{ name:'地图41', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    42:{ name:'地图42', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    43:{ name:'地图43', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    44:{ name:'地图44', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    45:{ name:'地图45', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    46:{ name:'地图46', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    47:{ name:'地图47', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    48:{ name:'地图48', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    49:{ name:'地图49', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    50:{ name:'地图50', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    51:{ name:'地图51', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    52:{ name:'地图52', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    53:{ name:'地图53', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] },
+    54:{ name:'地图54', mapUrl:'', pointUrl:'',
+        A1:{ charm:'', continent:'', resource:'' },
+        A2:{ charm:'', continent:'', resource:'' },
+        A3:{ charm:'', continent:'', resource:'' },
+        A4:{ charm:'', continent:'', resource:'' },
+        A5:{ charm:'', continent:'', resource:'' },
+        cityStates: [] }
+};
+
+new Vue({
+    el: '#app',
+    data: {
+        _hoverSlot: -1,
+        banPhase: 0,
+        banned2: { pool1: [], pool2: [] },
+        imageViewerSrc: '',
+        showSplash: true,
+        currentStep: 1,
+        mapId: null,
+        mapName: '',
+        mapData: {},
+        mapView: 'overview',
+        teamA: null,
+        teamB: null,
+        pool1: null,
+        pool2: null,
+        banCount: 0,
+        banMode: false,
+        banned: { pool1: [], pool2: [] },
+        selectedPoint: null,
+        timerRunning: false,
+        timeLeft: 900,
+        timerInterval: null,
+        cityStateData: CITY_STATE_DATA,
+        leaderData: LEADER_DATA,
+        picksA: [],
+        picksB: [],
+        pickOrder: [1,2,3,4,5,6]
+    },
+    computed: {
+        bannedList() { return [...this.banned.pool1, ...this.banned.pool2]; },
+banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
+        allBanned() {
+            const b1 = [...this.banned.pool1, ...this.banned.pool2];
+            const b2 = [...this.banned2.pool1, ...this.banned2.pool2];
+            return [...new Set([...b1, ...b2])];
+        },
+        mapCityStates() {
+            if (!this.mapId || !MAP_DATA[this.mapId]) return [];
+            return MAP_DATA[this.mapId].cityStates || [];
+        },
+        availableLeaders() {
+            if (!this.pool1 || !this.pool2) return [];
+            const allB = [...new Set([...this.banned.pool1, ...this.banned.pool2, ...this.banned2.pool1, ...this.banned2.pool2])];
+            return [...this.pool1.leaders, ...this.pool2.leaders].filter(l => !allB.includes(l));
+        },
+        formatTime() {
+            const m = Math.floor(this.timeLeft / 60);
+            const s = this.timeLeft % 60;
+            return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        },
+        // 6层选人槽位
+        draftSlots() {
+            const order = [1,2,3,4,5,6]; // 1=A1,2=B1,3=B2,4=A2,5=A3,6=B3
+            const slots = [];
+            const pickedA = [...this.picksA];
+            const pickedB = [...this.picksB];
+            let aIdx = 0, bIdx = 0;
+            for (let i = 0; i < 6; i++) {
+                const turn = order[i];
+                const isA = [1,4,5].includes(turn);
+                const picked = isA ? pickedA[aIdx] : pickedB[bIdx];
+                slots.push({
+                    team: isA ? 'A' : 'B',
+                    turn: turn,
+                    filled: !!picked,
+                    leader: picked || ''
+                });
+                if (isA) aIdx++; else bIdx++;
+            }
+            return slots;
+        },
+        currentPickIndex() {
+            const total = this.picksA.length + this.picksB.length;
+            return total < 6 ? total : -1;
+        },
+        hoverSlot: { get() { return this._hoverSlot; }, set(v) { this._hoverSlot = v; } }
+    },
+    methods: {
+        goStep(n) {
+            if (n === 4) {
+                if (this.banCount === 0) {
+                    this.banCount = Math.floor(Math.random() * 5) + 2;
+                }
+                this.banPhase = 1;
+                this.banned = { pool1:[], pool2:[] };
+                this.banned2 = { pool1:[], pool2:[] };
+            }
+            if (n === 5) {
+                this.banPhase = 3;
+            }
+            this.currentStep = n;
+        },
+        randomMap() {
+            const keys = Object.keys(MAP_DATA);
+            if (keys.length === 0) { alert('暂无地图数据'); return; }
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            this.mapId = parseInt(randomKey);
+            this.mapName = MAP_DATA[randomKey].name;
+            this.mapData = MAP_DATA[randomKey];
+            this.selectedPoint = null;
+            this.mapView = 'overview';
+        },
+        assignTeams() {
+            const colors = ['红','蓝'];
+            const shuffled = [...colors].sort(() => Math.random() - 0.5);
+            this.teamA = { name:'A队', color:shuffled[0], picks:[1,4,5] };
+            this.teamB = { name:'B队', color:shuffled[1], picks:[2,3,6] };
+            this.resetPicks();
+        },
+        randomPools() {
+            const poolNames = Object.keys(LEADER_POOLS);
+            const shuffled = [...poolNames].sort(() => Math.random() - 0.5);
+            this.pool1 = { name:shuffled[0], leaders:LEADER_POOLS[shuffled[0]] };
+            this.pool2 = { name:shuffled[1], leaders:LEADER_POOLS[shuffled[1]] };
+            this.banned = { pool1:[], pool2:[] };
+            this.banMode = false;
+            this.resetPicks();
+        },
+        toggleBanMode() {
+            this.banMode = !this.banMode;
+            if (!this.banMode) { this.banned = { pool1:[], pool2:[] }; this.banned2 = { pool1:[], pool2:[] }; }
+        },
+        isBanned(leader) { return this.banned.pool1.includes(leader) || this.banned.pool2.includes(leader) || this.banned2.pool1.includes(leader) || this.banned2.pool2.includes(leader); },
+        pickFromPool(leader) {
+            if (this.isPicked(leader) || this.isBanned(leader)) return;
+            const total = this.picksA.length + this.picksB.length;
+            if (total >= 6) { alert('已选满 6 人'); return; }
+            const next = this.pickOrder[total];
+            const team = [1,4,5].includes(next) ? 'A' : 'B';
+            if (team === 'A') this.picksA.push(leader);
+            else this.picksB.push(leader);
+        },
+        toggleBanPhase1(leader, pool) {
+            if (this.banPhase !== 1) return;
+            const list = this.banned[pool];
+            const idx = list.indexOf(leader);
+            if (idx > -1) { list.splice(idx, 1); }
+            else { if (this.bannedList.length < this.banCount) { list.push(leader); } else { alert('A队BAN位已满 (' + this.banCount + '个)'); } }
+            this.banned = Object.assign({}, this.banned);
+        },
+        confirmBanPhase1() {
+            if (this.bannedList.length !== this.banCount) { alert('请A队BAN恰好 ' + this.banCount + ' 个领袖'); return; }
+            this.banPhase = 2;
+        },
+        toggleBanPhase2(leader, pool) {
+            if (this.banPhase !== 2) return;
+            if (this.banned.pool1.includes(leader) || this.banned.pool2.includes(leader)) return;
+            const list = this.banned2[pool];
+            const idx = list.indexOf(leader);
+            if (idx > -1) { list.splice(idx, 1); }
+            else { if (this.banned2List.length < this.banCount) { list.push(leader); } else { alert('B队BAN位已满 (' + this.banCount + '个)'); } }
+            this.banned2 = Object.assign({}, this.banned2);
+        },
+        confirmBanPhase2() {
+            if (this.banned2List.length !== this.banCount) { alert('请B队BAN恰好 ' + this.banCount + ' 个领袖'); return; }
+            this.banPhase = 3;
+            alert('两轮BAN选完成！');
+        },
+        openImageViewer(src) { if (src) this.imageViewerSrc = src; },
+        toggleBan(leader, pool) {
+            if (this.banPhase === 1) this.toggleBanPhase1(leader, pool);
+            else if (this.banPhase === 2) this.toggleBanPhase2(leader, pool);
+        },
+        confirmBans() {
+            if (this.banPhase === 1) this.confirmBanPhase1();
+            else if (this.banPhase === 2) this.confirmBanPhase2();
+        },selectPoint(p) { this.selectedPoint = p; },
+        startTimer() {
+            if (this.timerRunning) return;
+            this.timeLeft = 900;
+            this.timerRunning = true;
+            this.timerInterval = setInterval(() => {
+                this.timeLeft -= 1;
+                if (this.timeLeft <= 0) {
+                    clearInterval(this.timerInterval);
+                    this.timerRunning = false;
+                    alert('⏰ 选人时间结束！');
+                }
+            }, 1000);
+        },
+        isPicked(leader) { return this.picksA.includes(leader) || this.picksB.includes(leader); },
+        pickLeader(leader, team) {
+            if (this.isPicked(leader) || this.isBanned(leader)) return;
+            const totalPicked = this.picksA.length + this.picksB.length;
+            if (totalPicked >= 6) { alert('已选满 6 人'); return; }
+            const nextPick = this.pickOrder[totalPicked];
+            if (team === 'A' && [1,4,5].includes(nextPick)) {
+                this.picksA.push(leader);
+            } else if (team === 'B' && [2,3,6].includes(nextPick)) {
+                this.picksB.push(leader);
+            } else {
+                alert('当前轮到 ' + ([1,4,5].includes(nextPick) ? 'A队' : 'B队') + ' (位次' + nextPick + ')，请等待');
+            }
+        },
+        draftLeadersForSlot(slotIdx) {
+            const order = [1,2,3,4,5,6];
+            if (slotIdx < 0 || slotIdx >= 6) return [];
+            const turn = order[slotIdx];
+            const isA = [1,4,5].includes(turn);
+            // Get all already picked leaders by both teams
+            const picked = [...this.picksA, ...this.picksB];
+            // Show all available leaders (from both pools, after bans)
+            return this.availableLeaders.filter(l => !picked.includes(l));
+        },
+        getLeaderPool(leaderName) {
+            for (const [pool, leaders] of Object.entries(LEADER_POOLS)) {
+                if (leaders.includes(leaderName)) return pool;
+            }
+            return '';
+        },
+        resetPicks() { this.picksA = []; this.picksB = []; },
+        resetAll() {
+            this.currentStep = 1;
+            this.mapId = null; this.mapName = ''; this.mapData = {};
+            this.teamA = null; this.teamB = null;
+            this.pool1 = null; this.pool2 = null;
+            this.banCount = 0; this.banPhase = 0; this.banMode = false;
+            this.banned = { pool1:[], pool2:[] };
+            this.banned2 = { pool1:[], pool2:[] };
+            this.imageViewerSrc = '';
+            this.selectedPoint = null;
+            this.timerRunning = false; this.timeLeft = 900;
+            if (this.timerInterval) clearInterval(this.timerInterval);
+            this.timerInterval = null;
+            this.picksA = []; this.picksB = [];
+        },
+    },
+    beforeDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
+});
+</script>
+</body>
+</html>
