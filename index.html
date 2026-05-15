@@ -223,6 +223,7 @@
         .pool-leader-item.clickable { cursor: pointer; }
         .pool-leader-item.clickable:hover { background: #3a4055; border-color: #c9a84c; transform: translateX(3px); }
         .pool-leader-item.banned { opacity: 0.35; text-decoration: line-through; color: #ff7a7a; }
+        .pool-leader-item.banned-by-opponent { opacity: 0.4; text-decoration: line-through; color: #ff7a7a; background: rgba(255,0,0,0.08); }
         .pool-leader-item.picked { opacity: 0.55; }
         .pool-leader-item .leader-name { font-size: 0.9rem; }
         .pool-leader-item .leader-status { font-size: 0.75rem; font-weight: 600; }
@@ -531,25 +532,26 @@
                 </h3>
 
                 <div class="pick-3col">
-                    <!-- 左侧：池1 -->
+                    <!-- 左侧：A队视角（显示B队BAN的领袖） -->
                     <div class="pick-pool-col">
-                        <div class="pool-col-header">
-                            <span class="pool-badge">池1</span>
-                            <span>{{ pool1.name }}</span>
+                        <div class="pool-col-header" style="border-left:4px solid #b85454;padding-left:12px;">
+                            <span class="pool-badge" style="background:#b85454;">A队选人</span>
+                            <span>A队可选池 · 红标为B队BAN（A不可选）</span>
                         </div>
                         <div class="pool-col-list">
-                            <div v-for="leader in pool1.leaders" :key="leader"
+                            <div v-for="leader in allLeaders" :key="leader"
                                  class="pool-leader-item"
                                  :class="{
-                                     'banned': isBanned(leader),
-                                     'picked': isPicked(leader),
-                                     'clickable': !isBanned(leader) && !isPicked(leader) && canPick()
+                                     'banned-by-opponent': isBannedByB(leader),
+                                     'picked': isPickedByA(leader),
+                                     'clickable': !isBannedByB(leader) && !isPickedByA(leader) && canPick()
                                  }"
-                                 @click="pickFromPool(leader)">
+                                 @click="pickFromPool(leader, 'A')">
                                 <span class="leader-name">{{ leader }}</span>
-                                <span class="leader-status" v-if="isBanned(leader)">&#x274c; BAN</span>
-                                <span class="leader-status picked" v-else-if="isPicked(leader)">&#x2705;</span>
-                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446; 选</span>
+                                <span class="leader-pool-tag">{{ getLeaderPool(leader) }}</span>
+                                <span class="leader-status" v-if="isBannedByB(leader)">&#x274c; B队BAN</span>
+                                <span class="leader-status picked" v-else-if="isPicked(leader)">&#x2705; 已选</span>
+                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446;</span>
                             </div>
                         </div>
                     </div>
@@ -574,7 +576,7 @@
                                     <span class="slot-filled-name">&#x2705; {{ slot.leader }}</span>
                                 </template>
                                 <template v-else-if="idx === currentPickIndex && picksA.length + picksB.length < 6">
-                                    <span class="slot-waiting active">&#x2b07; 点击两侧领袖选人</span>
+                                    <span class="slot-waiting active">&#x2b07; 选人</span>
                                 </template>
                                 <template v-else>
                                     <span class="slot-waiting">&#x23f3; 等待</span>
@@ -583,25 +585,26 @@
                         </div>
                     </div>
 
-                    <!-- 右侧：池2 -->
+                    <!-- 右侧：B队视角（显示A队BAN的领袖） -->
                     <div class="pick-pool-col">
-                        <div class="pool-col-header">
-                            <span class="pool-badge">池2</span>
-                            <span>{{ pool2.name }}</span>
+                        <div class="pool-col-header" style="border-left:4px solid #4a6f9a;padding-left:12px;">
+                            <span class="pool-badge" style="background:#4a6f9a;">B队选人</span>
+                            <span>B队可选池 · 蓝标为A队BAN（B不可选）</span>
                         </div>
                         <div class="pool-col-list">
-                            <div v-for="leader in pool2.leaders" :key="leader"
+                            <div v-for="leader in allLeaders" :key="leader"
                                  class="pool-leader-item"
                                  :class="{
-                                     'banned': isBanned(leader),
-                                     'picked': isPicked(leader),
-                                     'clickable': !isBanned(leader) && !isPicked(leader) && canPick()
+                                     'banned-by-opponent': isBannedByA(leader),
+                                     'picked': isPickedByA(leader),
+                                     'clickable': !isBannedByA(leader) && !isPickedByB(leader) && canPick()
                                  }"
-                                 @click="pickFromPool(leader)">
+                                 @click="pickFromPool(leader, 'B')">
                                 <span class="leader-name">{{ leader }}</span>
-                                <span class="leader-status" v-if="isBanned(leader)">&#x274c; BAN</span>
-                                <span class="leader-status picked" v-else-if="isPicked(leader)">&#x2705;</span>
-                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446; 选</span>
+                                <span class="leader-pool-tag">{{ getLeaderPool(leader) }}</span>
+                                <span class="leader-status" v-if="isBannedByA(leader)">&#x274c; A队BAN</span>
+                                <span class="leader-status picked" v-else-if="isPickedByB(leader)">&#x2705; 已选</span>
+                                <span class="leader-turn-hint" v-else-if="canPick()">&#x1f446;</span>
                             </div>
                         </div>
                     </div>
@@ -1224,6 +1227,10 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             const s = this.timeLeft % 60;
             return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
         },
+        allLeaders() {
+            if (!this.pool1 || !this.pool2) return [];
+            return [...this.pool1.leaders, ...this.pool2.leaders];
+        },
         // 6层选人槽位
         draftSlots() {
             const order = [1,2,3,4,5,6]; // 1=A1,2=B1,3=B2,4=A2,5=A3,6=B3
@@ -1297,13 +1304,24 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             if (!this.banMode) { this.banned = { pool1:[], pool2:[] }; this.banned2 = { pool1:[], pool2:[] }; }
         },
         isBanned(leader) { return this.banned.pool1.includes(leader) || this.banned.pool2.includes(leader) || this.banned2.pool1.includes(leader) || this.banned2.pool2.includes(leader); },
-        pickFromPool(leader) {
-            if (this.isPicked(leader) || this.isBanned(leader)) return;
+        isBannedByA(leader) {
+            return this.banned.pool1.includes(leader) || this.banned.pool2.includes(leader);
+        },
+        isBannedByB(leader) {
+            return this.banned2.pool1.includes(leader) || this.banned2.pool2.includes(leader);
+        },
+        pickFromPool(leader, side) {
             const total = this.picksA.length + this.picksB.length;
             if (total >= 6) { alert('已选满 6 人'); return; }
             const next = this.pickOrder[total];
-            const team = [1,4,5].includes(next) ? 'A' : 'B';
-            if (team === 'A') this.picksA.push(leader);
+            const pickingTeam = [1,4,5].includes(next) ? 'A' : 'B';
+            
+            if (side !== pickingTeam) { alert('当前轮到 ' + pickingTeam + '队选人，请在该队侧选择领袖'); return; }
+            
+            if ((pickingTeam === 'A' && this.picksA.includes(leader)) || (pickingTeam === 'B' && this.picksB.includes(leader))) return;
+            if (pickingTeam === 'A' && this.isBannedByB(leader)) { alert('该领袖被B队BAN，A队不可选'); return; }
+            if (pickingTeam === 'B' && this.isBannedByA(leader)) { alert('该领袖被A队BAN，B队不可选'); return; }
+            if (pickingTeam === 'A') this.picksA.push(leader);
             else this.picksB.push(leader);
         },
         canPick() {
@@ -1323,7 +1341,6 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
         },
         toggleBanPhase2(leader, pool) {
             if (this.banPhase !== 2) return;
-            if (this.banned.pool1.includes(leader) || this.banned.pool2.includes(leader)) return;
             const list = this.banned2[pool];
             const idx = list.indexOf(leader);
             if (idx > -1) { list.splice(idx, 1); }
@@ -1358,6 +1375,8 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             }, 1000);
         },
         isPicked(leader) { return this.picksA.includes(leader) || this.picksB.includes(leader); },
+        isPickedByA(leader) { return this.picksA.includes(leader); },
+        isPickedByB(leader) { return this.picksB.includes(leader); },
         pickLeader(leader, team) {
             if (this.isPicked(leader) || this.isBanned(leader)) return;
             const totalPicked = this.picksA.length + this.picksB.length;

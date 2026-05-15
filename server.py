@@ -3,9 +3,12 @@ import http.server
 import socketserver
 import socket
 import os
+import sys
 
 PORT = 8080
 DIR = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(DIR)
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
