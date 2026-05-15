@@ -7,7 +7,6 @@ import sys
 
 PORT = 8080
 DIR = os.path.dirname(os.path.abspath(__file__))
-
 os.chdir(DIR)
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -19,22 +18,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 hostname = socket.gethostname()
 local_ip = socket.gethostbyname(hostname)
 
-print("=" * 55)
-print("  [ 文明6 . 高校娱乐赛 - 本地服务器 ]")
-print("=" * 55)
+print("=" * 50)
+print("  Civ6 Tournament Server")
+print("=" * 50)
 print()
-print(f"  本地访问:  http://localhost:{PORT}")
-print(f"  局域网访问: http://{local_ip}:{PORT}")
+print(f"  Local:   http://localhost:{PORT}")
+print(f"  Network: http://{local_ip}:{PORT}")
 print()
-print("  把局域网地址分享到微信群,")
-print("  大家就能同时看到地图图片了!")
-print()
-print("  按 Ctrl+C 关闭服务器")
-print("=" * 55)
-print()
+print("  Share the network address to your group.")
+print("  Press Ctrl+C to stop.")
+print("=" * 50)
 
 with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n服务器已关闭")
+        print()
+        print("Server stopped.")
