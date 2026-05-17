@@ -40,6 +40,25 @@
             padding: 6px 18px; border-radius: 30px; font-size: 0.9rem; color: #8a9ab5;
         }
 
+        .tactics-entry {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; margin-bottom: 30px; padding: 18px 40px;
+            border: 2px dashed #4a6fa5; border-radius: 16px;
+            cursor: pointer; transition: all 0.3s;
+            background: rgba(74, 111, 165, 0.08);
+        }
+        .tactics-entry:hover {
+            border-color: #c9a84c; background: rgba(200, 168, 76, 0.08);
+            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(200,168,76,0.12);
+        }
+        .tactics-entry .tactics-icon { font-size: 2rem; }
+        .tactics-entry .tactics-label {
+            font-size: 1.1rem; color: #d0d8e8; font-weight: 600; letter-spacing: 2px;
+        }
+        .tactics-entry .tactics-desc {
+            font-size: 0.8rem; color: #6a7a8a; letter-spacing: 1px;
+        }
+
         .container { max-width: 1400px; width: 100%; margin: 0 auto; padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .progress-bar { display: flex; gap: 4px; margin-bottom: 30px; padding: 10px 0; }
         .progress-step { flex: 1; height: 6px; border-radius: 3px; background: #2f3547; transition: background 0.4s; }
@@ -67,6 +86,93 @@
         .btn-sm { padding: 8px 18px; font-size: 0.9rem; }
         .card { background: #323849; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* ===== 模式切换开关 ===== */
+        .mode-toggle-bar {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 12px; margin-bottom: 16px;
+        }
+        .mode-toggle-bar .mode-label {
+            font-size: 0.9rem; color: #8a9ab5; font-weight: 600;
+        }
+        .mode-toggle {
+            position: relative; display: inline-flex; align-items: center;
+            background: #1e2535; border-radius: 30px; padding: 4px;
+            border: 1px solid #3f4658;
+        }
+        .mode-toggle button {
+            border: none; background: transparent; color: #8a9ab5;
+            padding: 8px 20px; border-radius: 26px; cursor: pointer;
+            font-weight: 600; font-size: 0.85rem; transition: 0.3s;
+            white-space: nowrap;
+        }
+        .mode-toggle button.active {
+            background: #c9a84c; color: #1a1e2a; box-shadow: 0 0 12px rgba(200,168,76,0.3);
+        }
+        .mode-hint {
+            font-size: 0.8rem; color: #5a6a7a; font-style: italic;
+        }
+
+        /* 自选模式 - 地图选择网格 */
+        .map-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px; max-height: 500px; overflow-y: auto;
+            padding-right: 8px;
+        }
+        .map-select-grid::-webkit-scrollbar { width: 6px; }
+        .map-select-grid::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .map-select-grid::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .map-select-item {
+            background: #1e2535; border: 2px solid #3f4658; border-radius: 12px;
+            padding: 14px 16px; cursor: pointer; transition: 0.3s;
+            text-align: center; font-weight: 600;
+        }
+        .map-select-item:hover { border-color: #c9a84c; background: #252c3e; transform: translateY(-2px); }
+        .map-select-item.selected { border-color: #c9a84c; background: #2a3a2a; box-shadow: 0 0 16px rgba(200,168,76,0.2); }
+        .map-select-item .map-num { font-size: 0.8rem; color: #8a9ab5; }
+        .map-select-item .map-name-display { font-size: 1rem; color: #d0d8e8; margin-top: 4px; }
+
+        /* 自选模式 - 队伍配置卡片 */
+        .team-config-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .team-config-card {
+            background: #1e2535; border-radius: 14px; padding: 20px;
+            border: 2px solid #3f4658; transition: 0.3s;
+        }
+        .team-config-card:hover { border-color: #4a6fa5; }
+        .team-config-card.red-accent { border-left: 4px solid #b85454; }
+        .team-config-card.blue-accent { border-left: 4px solid #4a6f9a; }
+        .color-select {
+            display: flex; gap: 8px; margin-top: 12px;
+        }
+        .color-select button {
+            flex: 1; padding: 10px; border-radius: 8px; border: 2px solid #3f4658;
+            background: #252a3a; color: #d0d8e8; cursor: pointer; font-weight: 600;
+            transition: 0.2s;
+        }
+        .color-select button.red-btn { border-color: #8a3a3a; }
+        .color-select button.red-btn.active { background: #8a3a3a; border-color: #b85454; }
+        .color-select button.blue-btn { border-color: #3a5a7a; }
+        .color-select button.blue-btn.active { background: #3a5a7a; border-color: #4a6f9a; }
+
+        /* 池子选择 */
+        .pool-select-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .pool-select-card {
+            background: #1e2535; border: 2px solid #3f4658; border-radius: 14px;
+            padding: 16px; cursor: pointer; transition: 0.3s; text-align: center;
+        }
+        .pool-select-card:hover { border-color: #c9a84c; transform: translateY(-2px); }
+        .pool-select-card.selected { border-color: #c9a84c; background: #252c3e; box-shadow: 0 0 16px rgba(200,168,76,0.2); }
+        .pool-select-card.disabled { opacity: 0.35; pointer-events: none; }
+        .pool-select-card .pool-name { font-size: 1.1rem; font-weight: 700; color: #d0d8e8; }
+        .pool-select-card .pool-count { font-size: 0.8rem; color: #8a9ab5; margin-top: 4px; }
+        .pool-select-card .pool-check { color: #c9a84c; font-size: 1.4rem; margin-top: 6px; }
+        .pool-select-card .pool-slot { color: #5a6a7a; font-size: 0.85rem; margin-top: 4px; }
 
         .map-pick-area { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .map-preview { max-width: 600px; width: 100%; border-radius: 12px; border: 2px solid #4a6fa5; overflow: hidden; transition: all 0.4s; }
@@ -103,11 +209,10 @@
         .leader-item .tooltip .ability-label { color: #8a9ab5; font-size: 0.82rem; margin-top: 10px; font-weight: 600; letter-spacing: 1px; }
         .leader-item .tooltip .ability-text { color: #d0d8e8; }
         .leader-item:hover .tooltip { visibility: visible; opacity: 1; }
-        /* semi-transparent overlay when tooltip shows */
-        .leader-item:hover::after {
+        /*.leader-item:hover::after {
             content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
             z-index: 9998; pointer-events: none;
-        }
+        }*/
 
         .map-layout { display: flex; gap: 24px; min-height: 500px; }
         .point-sidebar { display: flex; flex-direction: column; gap: 8px; width: 80px; flex-shrink: 0; }
@@ -125,8 +230,6 @@
         .map-toggle button { background: #3a3f55; border: 1px solid #5a6a8a; color: white; padding: 6px 20px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .map-toggle button.active { background: #4a6fa5; }
 
-        
-
         .ban-header { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
         .ban-badge { background: #8a4a4a; padding: 6px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; }
         .city-state-section { margin-top: 20px; }
@@ -137,7 +240,6 @@
         .cs-item { margin-bottom: 6px; border-bottom: 1px solid #2f3547; padding-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .cs-item .cs-name { color: #c9a84c; font-weight: 600; }
         .cs-item .cs-type { color: #8a9ab5; font-size: 0.85rem; }
-
 
         .cs-item.cs-hover { position: relative; cursor: default; }
         .cs-item .cs-tooltip {
@@ -150,10 +252,10 @@
             transition: opacity 0.2s, visibility 0.2s;
         }
         .cs-item.cs-hover:hover .cs-tooltip { visibility: visible; opacity: 1; }
-        .cs-item.cs-hover:hover::after {
+        /*.cs-item.cs-hover:hover::after {
             content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
             z-index: 9998; pointer-events: none;
-        }
+        }*/
         .cs-tooltip-type { color: #c9a84c; font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
         .cs-tooltip-bonus { color: #d0d8e8; font-size: 0.92rem; line-height: 1.7; }
         .timer-area { text-align: center; margin: 20px 0; }
@@ -186,7 +288,6 @@
         .dropdown-item:hover { background: #3a4055; border-color: #4a6fa5; }
         .dropdown-item .leader-pool-tag { font-size: 0.75rem; color: #6a7a8a; background: #1e2535; padding: 2px 10px; border-radius: 12px; }
         .dropdown-empty { color: #5a6a7a; text-align: center; padding: 20px; }
-        /* ===== BAN 两轮制状态栏 ===== */
         .ban-status-bar { display: flex; align-items: center; gap: 12px; background: #1e2535; border-radius: 14px; padding: 16px 20px; flex-wrap: wrap; }
         .ban-phase { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 30px; background: #2f3547; font-size: 0.9rem; transition: 0.3s; }
         .ban-phase.active { background: #3a4055; box-shadow: 0 0 12px rgba(74,111,165,0.3); }
@@ -218,13 +319,9 @@
         .pd-img-card:hover { border-color: #c9a84c; transform: scale(1.03); }
         .pd-label { font-size: 0.8rem; color: #8a9ab5; margin-bottom: 4px; }
         .pd-img-card img { width: 100%; border-radius: 6px; display: block; }
-        .image-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; cursor: pointer; animation: fadeIn 0.2s ease; }
-        .image-modal img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; border: 2px solid #4a6fa5; cursor: default; box-shadow: 0 0 60px rgba(0,0,0,0.5); }
         .im-close { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; cursor: pointer; opacity: 0.7; transition: 0.2s; line-height: 1; }
         .im-close:hover { opacity: 1; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ===== 三列选人布局 ===== */
         .pick-3col { display: flex; gap: 16px; align-items: flex-start; }
         .pick-pool-col { flex: 1; min-width: 0; background: #222838; border-radius: 14px; padding: 12px; border: 1px solid #3f4658; }
         .pool-col-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid #3f4658; margin-bottom: 8px; font-weight: 600; }
@@ -270,9 +367,10 @@
             .point-sidebar { flex-direction: row; width: 100%; overflow-x: auto; }
             .point-detail .detail-panel { position: static; width: 100%; margin: 10px 0 0 0; }
             .grid-2 { grid-template-columns: 1fr; }
-            
             .leader-item .tooltip { left: 0; top: 100%; width: 280px; }
             .step-container { padding: 20px; }
+            .team-config-grid { grid-template-columns: 1fr; }
+            .map-select-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
@@ -287,18 +385,35 @@
             <span>54张地图</span>
             <span>AB双队对抗</span>
         </div>
+        <div class="tactics-entry" @click.stop="openTactics">
+            <span class="tactics-icon">📋</span>
+            <span class="tactics-label">战术规划面板</span>
+            <span class="tactics-desc">地图标记 · 点位评分 · 领袖分类</span>
+        </div>
         <button class="enter-btn" @click.stop="showSplash = false">点击开始</button>
     </div>
 
     <div class="container" v-if="!showSplash">
+        <!-- ===== 模式切换 ===== -->
+        <div class="mode-toggle-bar">
+            <span class="mode-label">🔧 模式：</span>
+            <div class="mode-toggle">
+                <button :class="{ active: mode === 'auto' }" @click="switchMode('auto')">🎲 随机模式</button>
+                <button :class="{ active: mode === 'manual' }" @click="switchMode('manual')">✋ 自选模式</button>
+            </div>
+            <span class="mode-hint" v-if="mode === 'manual'">手动选择各项配置</span>
+        </div>
+
         <div class="progress-bar">
             <div v-for="n in 5" :key="n" class="progress-step" :class="{ active: currentStep === n, done: currentStep > n }"></div>
         </div>
 
-        <!-- 步骤1 -->
+        <!-- 步骤1：选择地图 -->
         <div class="step-container" v-if="currentStep === 1">
-            <div class="step-title"><span class="step-num">1</span>随机地图</div>
-            <div class="map-pick-area">
+            <div class="step-title"><span class="step-num">1</span>{{ mode === 'auto' ? '随机地图' : '选择地图' }}</div>
+
+            <!-- 随机模式 -->
+            <div v-if="mode === 'auto'" class="map-pick-area">
                 <button class="btn btn-gold" @click="randomMap" style="font-size:1.2rem;padding:16px 40px;">🎲 抽取地图 (1-54)</button>
                 <div v-if="mapId" style="text-align:center;width:100%;">
                     <div style="font-size:1.4rem;background:#1e2535;padding:10px 30px;border-radius:40px;display:inline-block;margin-bottom:16px;">📍 地图 #{{ mapId }} : {{ mapName }}</div>
@@ -308,22 +423,72 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 自选模式 -->
+            <div v-if="mode === 'manual'">
+                <p style="color:#8a9ab5;margin-bottom:16px;">请从下方地图列表中点击选择一张地图</p>
+                <div class="map-select-grid">
+                    <div v-for="id in mapIdList" :key="id"
+                         class="map-select-item"
+                         :class="{ selected: mapId === id }"
+                         @click="selectMapManual(id)">
+                        <div class="map-num">#{{ id }}</div>
+                        <div class="map-name-display">{{ MAP_DATA[id].name }}</div>
+                    </div>
+                </div>
+                <div v-if="mapId" style="text-align:center;margin-top:20px;">
+                    <div style="font-size:1.2rem;background:#1e2535;padding:8px 24px;border-radius:30px;display:inline-block;margin-bottom:12px;">📍 已选：地图 #{{ mapId }} : {{ mapName }}</div>
+                    <div class="map-preview" style="margin:0 auto;">
+                        <img v-if="mapData.mapUrl" :src="mapData.mapUrl" :alt="mapName + '预览图'">
+                        <div v-else class="placeholder">暂无预览图</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="nav-buttons">
                 <div class="left"></div>
                 <div class="right">
-                    <button class="btn" @click="randomMap">🎲 重新抽取</button>
+                    <button v-if="mode === 'auto'" class="btn" @click="randomMap">🎲 重新抽取</button>
                     <button class="btn btn-gold" :disabled="!mapId" @click="goStep(2)">下一步 →</button>
                 </div>
             </div>
         </div>
 
-        <!-- 步骤2 -->
+        <!-- 步骤2：队伍分配 -->
         <div class="step-container" v-if="currentStep === 2">
             <div class="step-title"><span class="step-num">2</span>红蓝队伍 → A/B 分配</div>
-            <p style="color:#8a9ab5;margin-bottom:16px;">线下两队分别选择 <strong style="color:#b85454;">红色</strong> 和 <strong style="color:#4a6f9a;">蓝色</strong>，系统将随机分配 A队(1/4/5位) 和 B队(2/3/6位)</p>
-            <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                <button class="btn btn-gold" @click="assignTeams" style="font-size:1.1rem;padding:14px 36px;">🎲 随机分配</button>
+            <p style="color:#8a9ab5;margin-bottom:16px;">线下两队分别选择 <strong style="color:#b85454;">红色</strong> 和 <strong style="color:#4a6f9a;">蓝色</strong>，系统将分配 A队(1/4/5位) 和 B队(2/3/6位)</p>
+
+            <!-- 自选模式 -->
+            <div v-if="mode === 'manual'" class="team-config-grid" style="margin-bottom:20px;">
+                <div class="team-config-card red-accent">
+                    <h3 style="color:#b85454;margin-bottom:8px;">🔴 红队身份</h3>
+                    <p style="color:#8a9ab5;font-size:0.9rem;margin-bottom:12px;">选择红队对应 A队 还是 B队</p>
+                    <div class="color-select">
+                        <button class="red-btn" :class="{ active: manualRedIsA === true }" @click="manualRedIsA = true">
+                            A队 (位次 1·4·5)
+                        </button>
+                        <button class="red-btn" :class="{ active: manualRedIsA === false }" @click="manualRedIsA = false">
+                            B队 (位次 2·3·6)
+                        </button>
+                    </div>
+                </div>
+                <div class="team-config-card blue-accent">
+                    <h3 style="color:#4a6f9a;margin-bottom:8px;">🔵 蓝队身份</h3>
+                    <p style="color:#8a9ab5;font-size:0.9rem;margin-bottom:12px;">蓝队自动对应另一队</p>
+                    <div class="color-select">
+                        <button class="blue-btn" :class="{ active: manualRedIsA === false }" disabled style="opacity:0.6;">
+                            {{ manualRedIsA ? 'B队 (位次 2·3·6)' : 'A队 (位次 1·4·5)' }}
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <button v-if="mode === 'auto'" class="btn btn-gold" @click="assignTeams" style="font-size:1.1rem;padding:14px 36px;">🎲 随机分配</button>
+                <button v-if="mode === 'manual'" class="btn btn-gold" @click="assignTeamsManual" :disabled="manualRedIsA === null" style="font-size:1.1rem;padding:14px 36px;">✅ 确认分配</button>
+            </div>
+
             <div v-if="teamA" class="team-cards" style="margin-top:20px;">
                 <div class="team-card" :class="teamA.color === '红' ? 'team-red' : 'team-blue'">
                     <h3>{{ teamA.name }} — <span :style="{ color: teamA.color === '红' ? '#b85454' : '#4a6f9a' }">{{ teamA.color }}色</span></h3>
@@ -337,17 +502,50 @@
             <div class="nav-buttons">
                 <div class="left"><button class="btn btn-sm" @click="goStep(1)">← 上一步</button></div>
                 <div class="right">
-                    <button class="btn" @click="assignTeams">🎲 重新分配</button>
+                    <button v-if="mode === 'auto'" class="btn" @click="assignTeams">🎲 重新分配</button>
                     <button class="btn btn-gold" :disabled="!teamA" @click="goStep(3)">下一步 →</button>
                 </div>
             </div>
         </div>
 
-        <!-- 步骤3 -->
+        <!-- 步骤3：领袖池抽取 -->
         <div class="step-container" v-if="currentStep === 3">
-            <div class="step-title"><span class="step-num">3</span>领袖池抽取</div>
-            <p style="color:#8a9ab5;margin-bottom:16px;">从6大领袖池中随机抽取2个池子，鼠标悬浮可查看领袖详细信息</p>
-            <button class="btn btn-gold" @click="randomPools" style="font-size:1.1rem;padding:14px 36px;margin-bottom:20px;">🎲 抽取两个领袖池</button>
+            <div class="step-title"><span class="step-num">3</span>领袖池{{ mode === 'auto' ? '抽取' : '选择' }}</div>
+            <p style="color:#8a9ab5;margin-bottom:16px;">从6大领袖池中{{ mode === 'auto' ? '随机抽取' : '手动选择' }}2个池子，鼠标悬浮可查看领袖详细信息</p>
+
+            <!-- 随机模式 -->
+            <div v-if="mode === 'auto'">
+                <button class="btn btn-gold" @click="randomPools" style="font-size:1.1rem;padding:14px 36px;margin-bottom:20px;">🎲 抽取两个领袖池</button>
+            </div>
+
+            <!-- 自选模式 -->
+            <div v-if="mode === 'manual'" style="margin-bottom:20px;">
+                <p style="color:#c9a84c;font-weight:600;margin-bottom:8px;">
+                    请选择2个池子（当前已选 {{ manualSelectedPools.length }} / 2）
+                </p>
+                <div class="pool-select-grid">
+                    <div v-for="(leaders, poolName) in LEADER_POOLS" :key="poolName"
+                         class="pool-select-card"
+                         :class="{
+                             selected: manualSelectedPools.includes(poolName),
+                             disabled: manualSelectedPools.length >= 2 && !manualSelectedPools.includes(poolName)
+                         }"
+                         @click="togglePoolSelect(poolName)">
+                        <div class="pool-name">{{ poolName }}</div>
+                        <div class="pool-count">{{ leaders.length }} 位领袖</div>
+                        <div class="pool-check" v-if="manualSelectedPools.includes(poolName)">✓</div>
+                        <div class="pool-slot" v-if="manualSelectedPools.includes(poolName)">
+                            {{ manualSelectedPools.indexOf(poolName) === 0 ? '池1' : '池2' }}
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:16px;">
+                    <button class="btn btn-gold" :disabled="manualSelectedPools.length !== 2" @click="confirmPoolsManual">
+                        ✅ 确认池子选择
+                    </button>
+                </div>
+            </div>
+
             <div v-if="pool1 && pool2" class="grid-2">
                 <div class="card">
                     <h3 style="color:#c9a84c;margin-bottom:12px;">池1：{{ pool1.name }}</h3>
@@ -385,15 +583,15 @@
             <div class="nav-buttons">
                 <div class="left"><button class="btn btn-sm" @click="goStep(2)">← 上一步</button></div>
                 <div class="right">
-                    <button class="btn" @click="randomPools">🎲 重新抽取</button>
+                    <button v-if="mode === 'auto'" class="btn" @click="randomPools">🎲 重新抽取</button>
                     <button class="btn btn-gold" :disabled="!pool1" @click="goStep(4)">下一步 →</button>
                 </div>
             </div>
         </div>
 
-            <!-- 步骤4：两轮BAN -->
+        <!-- 步骤4：两轮BAN -->
         <div class="step-container" v-if="currentStep === 4">
-            <div class="step-title"><span class="step-num">4</span>BAN领袖 &middot; 两轮制</div>
+            <div class="step-title"><span class="step-num">4</span>BAN领袖 · 两轮制</div>
             <div v-if="pool1 && pool2">
                 <div class="ban-status-bar">
                     <div class="ban-phase" :class="{ active: banPhase === 1, done: banPhase > 1 }">
@@ -415,6 +613,15 @@
                         <span class="phase-label">完成</span>
                     </div>
                 </div>
+
+                <!-- 自选模式 - BAN数调节 -->
+                <div v-if="mode === 'manual' && banPhase === 1" style="margin-top:12px;text-align:center;">
+                    <span style="color:#8a9ab5;margin-right:10px;">每队BAN数：</span>
+                    <button class="btn btn-sm" @click="adjustBanCount(-1)" :disabled="banCount <= 1">-</button>
+                    <span style="font-size:1.3rem;font-weight:700;margin:0 16px;color:#c9a84c;">{{ banCount }}</span>
+                    <button class="btn btn-sm" @click="adjustBanCount(1)" :disabled="banCount >= 6">+</button>
+                </div>
+
                 <!-- 阶段1：A队BAN -->
                 <div v-if="banPhase === 1" style="margin-top:16px;">
                     <div class="ban-header" style="border-left:4px solid #b85454;padding-left:14px;margin-bottom:12px;">
@@ -497,7 +704,9 @@
                 <div class="left"><button class="btn btn-sm" @click="goStep(3)">&#8592; 上一步</button></div>
                 <div class="right"><button class="btn btn-gold" :disabled="banPhase < 3" @click="goStep(5)">下一步 &#8594;</button></div>
             </div>
-        </div><!-- 步骤5 -->
+        </div>
+
+        <!-- 步骤5 -->
         <div class="step-container" v-if="currentStep === 5">
             <div class="step-title"><span class="step-num">5</span>地图详情 &amp; 选人环节</div>
             <div v-if="mapId" class="map-layout" style="margin-bottom:24px;">
@@ -550,7 +759,6 @@
                 </h3>
 
                 <div class="pick-3col">
-                    <!-- 左侧：A队视角（显示B队BAN的领袖） -->
                     <div class="pick-pool-col">
                         <div class="pool-col-header" style="border-left:4px solid #b85454;padding-left:12px;">
                             <span class="pool-badge" style="background:#b85454;">A队选人</span>
@@ -574,7 +782,6 @@
                         </div>
                     </div>
 
-                    <!-- 中间：6层槽位 -->
                     <div class="pick-slots-col">
                         <div v-for="(slot, idx) in draftSlots" :key="idx"
                              :class="[
@@ -603,7 +810,6 @@
                         </div>
                     </div>
 
-                    <!-- 右侧：B队视角（显示A队BAN的领袖） -->
                     <div class="pick-pool-col">
                         <div class="pool-col-header" style="border-left:4px solid #4a6f9a;padding-left:12px;">
                             <span class="pool-badge" style="background:#4a6f9a;">B队选人</span>
@@ -614,7 +820,7 @@
                                  class="pool-leader-item"
                                  :class="{
                                      'banned-by-opponent': isBannedByA(leader),
-                                     'picked': isPickedByA(leader),
+                                     'picked': isPickedByB(leader),
                                      'clickable': !isBannedByA(leader) && !isPickedByB(leader) && canPick()
                                  }"
                                  @click="pickFromPool(leader, 'B')">
@@ -628,7 +834,6 @@
                     </div>
                 </div>
 
-                <!-- 计时器 -->
                 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #3f4658;">
                     <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
                         <button class="btn btn-green" @click="startTimer" :disabled="timerRunning">
@@ -639,7 +844,6 @@
                     </div>
                 </div>
 
-                <!-- 选人结果 -->
                 <div v-if="picksA.length + picksB.length === 6" style="text-align:center;margin-top:16px;">
                     <div style="font-size:1.5rem;color:#c9a84c;font-weight:bold;">&#x1f389; 选人完毕！</div>
                     <div style="display:flex;gap:40px;justify-content:center;margin-top:12px;">
@@ -936,6 +1140,7 @@ new Vue({
         imageViewerSrc: '',
         showSplash: true,
         currentStep: 1,
+        mode: 'auto', // 'auto' | 'manual'
         mapId: null,
         mapName: '',
         mapData: {},
@@ -955,11 +1160,17 @@ new Vue({
         leaderData: LEADER_DATA,
         picksA: [],
         picksB: [],
-        pickOrder: [1,2,3,4,5,6]
+        pickOrder: [1,2,3,4,5,6],
+        // 自选模式数据
+        manualRedIsA: null,
+        manualSelectedPools: [],
+        LEADER_POOLS: LEADER_POOLS,
+        MAP_DATA: MAP_DATA
     },
     computed: {
+        mapIdList() { return Object.keys(MAP_DATA).map(Number).sort((a,b) => a-b); },
         bannedList() { return [...this.banned.pool1, ...this.banned.pool2]; },
-banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
+        banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
         allBanned() {
             const b1 = [...this.banned.pool1, ...this.banned.pool2];
             const b2 = [...this.banned2.pool1, ...this.banned2.pool2];
@@ -983,9 +1194,8 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             if (!this.pool1 || !this.pool2) return [];
             return [...this.pool1.leaders, ...this.pool2.leaders];
         },
-        // 6层选人槽位
         draftSlots() {
-            const order = [1,2,3,4,5,6]; // 1=A1,2=B1,3=B2,4=A2,5=A3,6=B3
+            const order = [1,2,3,4,5,6];
             const slots = [];
             const pickedA = [...this.picksA];
             const pickedB = [...this.picksB];
@@ -1011,6 +1221,16 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
         hoverSlot: { get() { return this._hoverSlot; }, set(v) { this._hoverSlot = v; } }
     },
     methods: {
+        openTactics() {
+            window.open('./tactics.html', '_blank');
+        },
+        switchMode(m) {
+            if (this.currentStep > 1) {
+                if (!confirm('切换模式将重置当前进度，确定继续？')) return;
+            }
+            this.mode = m;
+            this.resetAll();
+        },
         goStep(n) {
             if (n === 4) {
                 if (this.banCount === 0) {
@@ -1025,6 +1245,15 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             }
             this.currentStep = n;
         },
+        // ===== 自选模式 - 地图 =====
+        selectMapManual(id) {
+            this.mapId = id;
+            this.mapName = MAP_DATA[id].name;
+            this.mapData = MAP_DATA[id];
+            this.selectedPoint = null;
+            this.mapView = 'overview';
+        },
+        // ===== 随机模式 - 地图 =====
         randomMap() {
             const keys = Object.keys(MAP_DATA);
             if (keys.length === 0) { alert('暂无地图数据'); return; }
@@ -1035,6 +1264,7 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             this.selectedPoint = null;
             this.mapView = 'overview';
         },
+        // ===== 随机模式 - 队伍 =====
         assignTeams() {
             const colors = ['红','蓝'];
             const shuffled = [...colors].sort(() => Math.random() - 0.5);
@@ -1042,6 +1272,19 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             this.teamB = { name:'B队', color:shuffled[1], picks:[2,3,6] };
             this.resetPicks();
         },
+        // ===== 自选模式 - 队伍 =====
+        assignTeamsManual() {
+            if (this.manualRedIsA === null) { alert('请选择红队身份'); return; }
+            if (this.manualRedIsA) {
+                this.teamA = { name:'A队', color:'红', picks:[1,4,5] };
+                this.teamB = { name:'B队', color:'蓝', picks:[2,3,6] };
+            } else {
+                this.teamA = { name:'A队', color:'蓝', picks:[1,4,5] };
+                this.teamB = { name:'B队', color:'红', picks:[2,3,6] };
+            }
+            this.resetPicks();
+        },
+        // ===== 随机模式 - 池子 =====
         randomPools() {
             const poolNames = Object.keys(LEADER_POOLS);
             const shuffled = [...poolNames].sort(() => Math.random() - 0.5);
@@ -1050,6 +1293,39 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             this.banned = { pool1:[], pool2:[] };
             this.banMode = false;
             this.resetPicks();
+        },
+        // ===== 自选模式 - 池子 =====
+        togglePoolSelect(poolName) {
+            const idx = this.manualSelectedPools.indexOf(poolName);
+            if (idx > -1) {
+                this.manualSelectedPools.splice(idx, 1);
+            } else {
+                if (this.manualSelectedPools.length >= 2) {
+                    alert('最多选择2个领袖池');
+                    return;
+                }
+                this.manualSelectedPools.push(poolName);
+            }
+        },
+        confirmPoolsManual() {
+            if (this.manualSelectedPools.length !== 2) { alert('请选择恰好2个领袖池'); return; }
+            const p1 = this.manualSelectedPools[0];
+            const p2 = this.manualSelectedPools[1];
+            this.pool1 = { name: p1, leaders: LEADER_POOLS[p1] };
+            this.pool2 = { name: p2, leaders: LEADER_POOLS[p2] };
+            this.banned = { pool1:[], pool2:[] };
+            this.banMode = false;
+            this.resetPicks();
+        },
+        // ===== BAN数调节（自选模式） =====
+        adjustBanCount(delta) {
+            const newVal = this.banCount + delta;
+            if (newVal >= 1 && newVal <= 6) {
+                this.banCount = newVal;
+                // 重置已选BAN
+                this.banned = { pool1:[], pool2:[] };
+                this.banned2 = { pool1:[], pool2:[] };
+            }
         },
         toggleBanMode() {
             this.banMode = !this.banMode;
@@ -1112,7 +1388,8 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
         confirmBans() {
             if (this.banPhase === 1) this.confirmBanPhase1();
             else if (this.banPhase === 2) this.confirmBanPhase2();
-        },selectPoint(p) { this.selectedPoint = p; },
+        },
+        selectPoint(p) { this.selectedPoint = p; },
         startTimer() {
             if (this.timerRunning) return;
             this.timeLeft = 900;
@@ -1129,29 +1406,6 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
         isPicked(leader) { return this.picksA.includes(leader) || this.picksB.includes(leader); },
         isPickedByA(leader) { return this.picksA.includes(leader); },
         isPickedByB(leader) { return this.picksB.includes(leader); },
-        pickLeader(leader, team) {
-            if (this.isPicked(leader) || this.isBanned(leader)) return;
-            const totalPicked = this.picksA.length + this.picksB.length;
-            if (totalPicked >= 6) { alert('已选满 6 人'); return; }
-            const nextPick = this.pickOrder[totalPicked];
-            if (team === 'A' && [1,4,5].includes(nextPick)) {
-                this.picksA.push(leader);
-            } else if (team === 'B' && [2,3,6].includes(nextPick)) {
-                this.picksB.push(leader);
-            } else {
-                alert('当前轮到 ' + ([1,4,5].includes(nextPick) ? 'A队' : 'B队') + ' (位次' + nextPick + ')，请等待');
-            }
-        },
-        draftLeadersForSlot(slotIdx) {
-            const order = [1,2,3,4,5,6];
-            if (slotIdx < 0 || slotIdx >= 6) return [];
-            const turn = order[slotIdx];
-            const isA = [1,4,5].includes(turn);
-            // Get all already picked leaders by both teams
-            const picked = [...this.picksA, ...this.picksB];
-            // Show all available leaders (from both pools, after bans)
-            return this.availableLeaders.filter(l => !picked.includes(l));
-        },
         getLeaderPool(leaderName) {
             for (const [pool, leaders] of Object.entries(LEADER_POOLS)) {
                 if (leaders.includes(leaderName)) return pool;
@@ -1173,6 +1427,8 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
             if (this.timerInterval) clearInterval(this.timerInterval);
             this.timerInterval = null;
             this.picksA = []; this.picksB = [];
+            this.manualRedIsA = null;
+            this.manualSelectedPools = [];
         },
     },
     beforeDestroy() { if (this.timerInterval) clearInterval(this.timerInterval); }
@@ -1180,4 +1436,3 @@ banned2List() { return [...this.banned2.pool1, ...this.banned2.pool2]; },
 </script>
 </body>
 </html>
-

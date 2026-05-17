@@ -15,5 +15,9 @@ echo.
 echo  Press Ctrl+C to stop server
 echo ========================================
 echo.
+
+:: 自动打开浏览器
+start http://localhost:8080
+
 python -m http.server 8080
 pause

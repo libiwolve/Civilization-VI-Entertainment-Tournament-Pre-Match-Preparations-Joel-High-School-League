@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>战术规划面板 · 文明6高校娱乐赛</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif; margin: 0; padding: 0; }
+        body { background: #1a1e2a; color: #e0e0e0; min-height: 100vh; }
+
+        .header {
+            background: linear-gradient(180deg, #1e2a3a 0%, #151a28 100%);
+            padding: 24px 32px; border-bottom: 2px solid #2f3547;
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        .header h1 { font-size: 1.8rem; background: linear-gradient(135deg, #e8c87a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+        .header .back-btn { background: #4a6fa5; border: none; color: white; padding: 10px 24px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; letter-spacing: 1px; text-decoration: none; display: inline-block; }
+        .header .back-btn:hover { background: #5f8bc9; }
+        .header .map-select { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .header .map-select select { background: #252a3a; border: 1px solid #3f4658; color: #d0d8e8; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+        .header .map-select label { color: #8a9ab5; font-size: 0.85rem; }
+
+        .container { max-width: 1600px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: #2a2f3f; border-radius: 16px; padding: 20px;
+            border: 1px solid #3f4658; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        .panel.full { grid-column: 1 / -1; }
+        .panel-title {
+            font-size: 1.1rem; font-weight: 700; color: #c9a84c;
+            border-bottom: 2px solid #4a6fa5; padding-bottom: 10px; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .panel-title .icon { font-size: 1.3rem; }
+
+        /* 地图画板 */
+        .map-canvas-container {
+            position: relative; display: inline-block;
+            border: 2px solid #4a6fa5; border-radius: 10px; overflow: hidden;
+            cursor: crosshair; max-width: 100%; width: 100%;
+        }
+        .map-canvas-container img { display: block; width: 100%; max-height: 900px; object-fit: contain; user-select: none; -webkit-user-drag: none; background: #1a1f2e; }
+        .map-canvas-container canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .drawing-tools {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; align-items: center;
+        }
+        .drawing-tools button {
+            background: #3a3f55; border: 2px solid #5a6a8a; color: white;
+            padding: 6px 12px; border-radius: 20px; cursor: pointer;
+            font-size: 0.8rem; transition: 0.2s; font-weight: 600;
+        }
+        .drawing-tools button:hover { background: #4a6fa5; }
+        .drawing-tools button.active { border-color: #c9a84c; background: #c9a84c; color: #1a1e2a; }
+        .tool-color { width: 30px; height: 30px; border-radius: 50% !important; padding: 0 !important; cursor: pointer; border: 2px solid transparent !important; }
+        .tool-color.red { background: #e06060; }
+        .tool-color.blue { background: #6090e0; }
+        .tool-color.green { background: #60c060; }
+        .tool-color.yellow { background: #e0c060; }
+        .tool-color.white { background: #f0f0f0; }
+        .tool-color.orange { background: #e09040; }
+        .tool-size { display: flex; align-items: center; gap: 4px; }
+        .tool-size input { accent-color: #c9a84c; width: 60px; }
+
+        /* 点位卡片 */
+        .points-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .point-card {
+            background: #1e2535; border: 2px solid #3f4658; border-radius: 10px;
+            padding: 10px; cursor: pointer; transition: 0.2s; text-align: center;
+        }
+        .point-card:hover { border-color: #c9a84c; transform: translateY(-2px); }
+        .point-card.selected { border-color: #c9a84c; background: #252c3e; box-shadow: 0 0 14px rgba(200,168,76,0.15); }
+        .point-card .point-label { font-weight: 700; color: #c9a84c; font-size: 0.9rem; }
+        .point-card .point-rating { font-size: 0.75rem; color: #8a9ab5; margin-top: 2px; }
+        .point-card .star { color: #e8c87a; }
+        .point-images { display: flex; gap: 8px; margin-top: 10px; }
+        .point-images .img-thumb {
+            flex: 1; border-radius: 8px; border: 2px solid #3f4658;
+            cursor: pointer; transition: 0.2s; overflow: hidden;
+        }
+        .point-images .img-thumb:hover { border-color: #c9a84c; }
+        .point-images .img-thumb img { width: 100%; height: 100px; object-fit: cover; display: block; }
+        .point-images .img-thumb .img-label { font-size: 0.7rem; color: #8a9ab5; text-align: center; padding: 3px; background: #1a1f2e; }
+
+        /* 城邦列表 */
+        .cs-list { max-height: 400px; overflow-y: auto; }
+        .cs-list::-webkit-scrollbar { width: 5px; }
+        .cs-list::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .cs-list::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .cs-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+            border-bottom: 1px solid #2f3547; border-radius: 6px; transition: 0.2s;
+            position: relative; cursor: default;
+        }
+        .cs-item:hover { background: #323849; }
+        .cs-item .cs-type-badge {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap;
+        }
+        .cs-type-badge.工业 { background: #8a6a2a; color: #e8c87a; }
+        .cs-type-badge.军事 { background: #8a3a3a; color: #ff9a9a; }
+        .cs-type-badge.科技 { background: #3a5a8a; color: #9ac4ff; }
+        .cs-type-badge.贸易 { background: #5a8a3a; color: #b4e89a; }
+        .cs-type-badge.文化 { background: #6a3a8a; color: #d4a8ff; }
+        .cs-type-badge.宗教 { background: #8a8a8a; color: #f0f0f0; }
+        /* 城邦 tooltip */
+        .cs-item .cs-tooltip {
+            visibility: hidden; opacity: 0;
+            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 9999; pointer-events: none;
+            background: #1a1f2e; border: 2px solid #c9a84c; border-radius: 14px;
+            padding: 20px; width: 400px; max-width: 90vw;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            transition: opacity 0.2s, visibility 0.2s;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .cs-item:hover .cs-tooltip { visibility: visible; opacity: 1; }
+        .cs-tooltip-type { color: #c9a84c; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .cs-tooltip-bonus { color: #d0d8e8; }
+
+        /* 领袖分类系统 */
+        .category-tabs {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+        }
+        .category-tab {
+            padding: 6px 14px; border-radius: 20px; border: 1px solid #3f4658;
+            background: #1e2535; color: #8a9ab5; cursor: pointer; font-size: 0.8rem;
+            font-weight: 600; transition: 0.2s; white-space: nowrap;
+        }
+        .category-tab:hover { border-color: #c9a84c; color: #d0d8e8; }
+        .category-tab.active { background: #c9a84c; color: #1a1e2a; border-color: #c9a84c; }
+        .category-tab .cat-count { font-size: 0.7rem; opacity: 0.7; }
+
+        .leader-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 6px; max-height: 300px; overflow-y: auto; padding-right: 4px;
+        }
+        .leader-grid::-webkit-scrollbar { width: 5px; }
+        .leader-grid::-webkit-scrollbar-track { background: #252a3a; border-radius: 3px; }
+        .leader-grid::-webkit-scrollbar-thumb { background: #4a6fa5; border-radius: 3px; }
+        .leader-chip {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 10px; border-radius: 8px; border: 1px solid #3f4658;
+            background: #1e2535; cursor: pointer; font-size: 0.82rem;
+            transition: 0.2s; white-space: nowrap;
+        }
+        .leader-chip:hover { border-color: #c9a84c; background: #252c3e; }
+        .leader-chip.in-category { border-color: #3a8a5a; background: #1a2a1e; }
+        .leader-chip .lc-cat { font-size: 0.65rem; color: #5a8a6a; }
+        .leader-chip .lc-add { font-size: 0.75rem; color: #4a6fa5; opacity: 0; transition: 0.2s; }
+        .leader-chip:hover .lc-add { opacity: 1; }
+        .category-drop-zone {
+            min-height: 40px; border: 2px dashed #3f4658; border-radius: 10px;
+            padding: 8px; margin: 6px 0; transition: 0.3s;
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+        }
+        .category-drop-zone.drag-over { border-color: #c9a84c; background: rgba(200,168,76,0.08); }
+        .category-drop-zone .dropped-leader {
+            padding: 4px 10px; border-radius: 12px; background: #2a3a2a;
+            border: 1px solid #3a8a5a; font-size: 0.8rem; cursor: pointer;
+            transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .category-drop-zone .dropped-leader:hover { background: #8a3a3a; border-color: #b85454; }
+        .category-drop-zone .dropped-leader .remove-x { color: #8a6a6a; font-weight: bold; font-size: 0.9rem; }
+        .category-drop-zone .dropped-leader:hover .remove-x { color: #ff9a9a; }
+        .add-category-btn {
+            background: transparent; border: 1px dashed #4a6fa5; color: #8a9ab5;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .add-category-btn:hover { border-color: #c9a84c; color: #c9a84c; }
+        .cat-input-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+        .cat-input-row input {
+            background: #1e2535; border: 1px solid #3f4658; border-radius: 8px;
+            color: #d0d8e8; padding: 6px 12px; font-size: 0.85rem; flex: 1;
+        }
+        .cat-input-row input:focus { outline: none; border-color: #c9a84c; }
+        .cat-input-row button {
+            background: #3a8a5a; border: none; color: white; padding: 6px 16px;
+            border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+        .cat-input-row .cancel-cat-btn { background: #3a3f55; }
+
+        /* 笔记区 */
+        .notes-area { width: 100%; }
+        .notes-area textarea {
+            width: 100%; height: 150px; background: #1e2535; border: 1px solid #3f4658;
+            border-radius: 10px; color: #d0d8e8; padding: 14px; font-size: 0.9rem;
+            resize: vertical; line-height: 1.6;
+        }
+        .notes-area textarea:focus { outline: none; border-color: #c9a84c; }
+
+        /* 图片查看器 */
+        .image-modal {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,0.9); display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+        .image-modal img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; border: 2px solid #4a6fa5; }
+        .image-modal .close-btn { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; cursor: pointer; opacity: 0.7; }
+        .image-modal .close-btn:hover { opacity: 1; }
+
+        .empty-state { text-align: center; color: #5a6a7a; padding: 30px; }
+        .rating-slider { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .rating-slider input[type=range] { flex: 1; accent-color: #c9a84c; }
+        .rating-slider .rating-val { color: #e8c87a; font-weight: 700; min-width: 30px; }
+        .btn-sm { background: #4a6fa5; border: none; color: white; padding: 6px 14px; border-radius: 16px; cursor: pointer; font-size: 0.8rem; }
+        .btn-sm:hover { background: #5f8bc9; }
+        .btn-sm.danger { background: #6a3a3a; }
+        .btn-sm.danger:hover { background: #8a4a4a; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 顶部导航 -->
+    <div class="header">
+        <h1>📋 战术规划面板</h1>
+        <a href="./index.html" class="back-btn">← 返回主界面</a>
+        <div class="map-select">
+            <label>选择地图：</label>
+            <select v-model="selectedMapId" @change="loadMap">
+                <option value="">-- 请选择地图 --</option>
+                <option v-for="id in mapIdList" :key="id" :value="id">#{{ id }} {{ MAP_DATA[id].name }}</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="container">
+        <!-- ===== 左列：地图 + 绘图工具 ===== -->
+        <div class="panel full">
+            <div class="panel-title"><span class="icon">🗺️</span> 地图标记板</div>
+            <div v-if="selectedMapId">
+                <!-- 绘图工具栏 -->
+                <div class="drawing-tools">
+                    <button :class="{ active: tool === 'pen' }" @click="tool='pen'" title="画笔">✏️ 画笔</button>
+                    <button :class="{ active: tool === 'eraser' }" @click="tool='eraser'" title="笔刷">🧹 笔刷</button>
+                    <button :class="{ active: tool === 'text' }" @click="tool='text'" title="文字">🔤 文字</button>
+                    <span style="color:#5a6a7a;margin:0 4px;">|</span>
+                    <span v-for="c in colors" :key="c" class="tool-color" :class="c"
+                          :style="{ opacity: activeColor === c ? 1 : 0.5, transform: activeColor === c ? 'scale(1.25)' : 'scale(1)' }"
+                          @click="activeColor = c"></span>
+                    <span style="color:#5a6a7a;margin:0 4px;">|</span>
+                    <div class="tool-size">
+                        <span style="font-size:0.75rem;">线宽</span>
+                        <input type="range" min="1" max="8" v-model.number="lineWidth">
+                        <span style="font-size:0.75rem;">{{ lineWidth }}</span>
+                    </div>
+                    <button @click="undoDraw" title="撤销">↩️</button>
+                    <button @click="clearCanvas" class="btn-sm danger" title="清除所有标记">清空</button>
+                </div>
+                <!-- 画板 -->
+                <div class="map-canvas-container" ref="canvasContainer"
+                     @mousedown="startDraw" @mousemove="draw" @mouseup="stopDraw" @mouseleave="stopDraw"
+                     @touchstart.prevent="startTouch" @touchmove.prevent="drawTouch" @touchend="stopDraw">
+                    <img :src="mapView === 'overview' ? mapData.mapUrl : mapData.pointUrl" ref="mapImg" @load="initCanvas" crossorigin="anonymous">
+                    <canvas ref="drawCanvas"></canvas>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                    <button @click="mapView='overview'" :style="{background: mapView==='overview'?'#4a6fa5':'#3a3f55',border:'1px solid #5a6a8a',color:'white',padding:'4px 14px',borderRadius:'16px',cursor:'pointer',fontSize:'0.8rem'}">总览图</button>
+                    <button @click="mapView='points'" :style="{background: mapView==='points'?'#4a6fa5':'#3a3f55',border:'1px solid #5a6a8a',color:'white',padding:'4px 14px',borderRadius:'16px',cursor:'pointer',fontSize:'0.8rem'}">点位图</button>
+                </div>
+            </div>
+            <div v-else class="empty-state">👆 请先在上方选择一张地图</div>
+        </div>
+
+        <!-- ===== 点位分析 + 城邦 ===== -->
+        <div class="panel">
+            <div class="panel-title"><span class="icon">📍</span> 点位分析</div>
+            <div v-if="selectedMapId">
+                <div class="points-grid">
+                    <div v-for="pt in points" :key="pt"
+                         class="point-card"
+                         :class="{ selected: activePoint === pt }"
+                         @click="activePoint = pt">
+                        <div class="point-label">{{ pt }}</div>
+                        <div class="point-rating">
+                            <span v-for="s in 5" :key="s" class="star">{{ s <= getPointRating(pt) ? '★' : '☆' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="activePoint && mapData[activePoint]" style="margin-top:12px;">
+                    <div class="rating-slider">
+                        <span style="color:#8a9ab5;font-size:0.85rem;">评分：</span>
+                        <input type="range" min="0" max="5" step="1" v-model.number="pointRatings[activePoint]">
+                        <span class="rating-val">{{ pointRatings[activePoint] || 0 }} ★</span>
+                    </div>
+                    <div class="point-images">
+                        <div class="img-thumb" @click="viewImage(mapData[activePoint].charm)" v-if="mapData[activePoint].charm">
+                            <img :src="mapData[activePoint].charm" @error="e => e.target.style.display='none'">
+                            <div class="img-label">魅力</div>
+                        </div>
+                        <div class="img-thumb" @click="viewImage(mapData[activePoint].continent)" v-if="mapData[activePoint].continent">
+                            <img :src="mapData[activePoint].continent" @error="e => e.target.style.display='none'">
+                            <div class="img-label">大陆</div>
+                        </div>
+                        <div class="img-thumb" @click="viewImage(mapData[activePoint].resource)" v-if="mapData[activePoint].resource">
+                            <img :src="mapData[activePoint].resource" @error="e => e.target.style.display='none'">
+                            <div class="img-label">资源</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">请先选择地图</div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title"><span class="icon">🏛️</span> 本局城邦</div>
+            <div v-if="selectedMapId && mapCityStates.length > 0" class="cs-list">
+                <div v-for="cs in mapCityStates" :key="cs" class="cs-item">
+                    <span class="cs-type-badge" :class="getCsType(cs)">{{ getCsType(cs) || '?' }}</span>
+                    <span style="flex:1;font-size:0.9rem;">{{ cs }}</span>
+                    <div class="cs-tooltip" v-if="cityStateData[cs]">
+                        <div class="cs-tooltip-type">{{ cityStateData[cs].type }}城邦</div>
+                        <div class="cs-tooltip-bonus">{{ cityStateData[cs].bonus }}</div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">{{ selectedMapId ? '该地图暂未绑定城邦数据' : '请先选择地图' }}</div>
+        </div>
+
+        <!-- ===== 领袖分类系统 ===== -->
+        <div class="panel full">
+            <div class="panel-title">
+                <span class="icon">👑</span> 领袖分类
+                <button class="add-category-btn" @click="showAddCategory = !showAddCategory">+ 新建分类</button>
+            </div>
+            <div v-if="showAddCategory" class="cat-input-row">
+                <input v-model="newCategoryName" placeholder="输入分类名称，如：自爆位、海战位、打钱位..." @keyup.enter="addCategory">
+                <button @click="addCategory">添加</button>
+                <button class="cancel-cat-btn" @click="showAddCategory=false;newCategoryName=''">取消</button>
+            </div>
+            <div v-if="selectedMapId">
+                <!-- 分类标签 -->
+                <div class="category-tabs">
+                    <div class="category-tab" :class="{ active: activeCategory === 'all' }" @click="activeCategory = 'all'">
+                        全部领袖 <span class="cat-count">({{ allLeadersFlat.length }})</span>
+                    </div>
+                    <div v-for="cat in customCategories" :key="cat" class="category-tab" :class="{ active: activeCategory === cat }" @click="activeCategory = cat">
+                        {{ cat }} <span class="cat-count">({{ getCategoryLeaders(cat).length }})</span>
+                        <span style="margin-left:4px;color:#8a6a6a;cursor:pointer;" @click.stop="deleteCategory(cat)">×</span>
+                    </div>
+                </div>
+                <!-- 当前分类的拖放区 -->
+                <div v-if="activeCategory !== 'all' && activeCategory" style="margin-bottom:12px;">
+                    <div style="color:#8a9ab5;font-size:0.8rem;margin-bottom:4px;">
+                        📥 {{ activeCategory }} 领袖（点击领袖加入分类，点击已放入领袖移除）
+                    </div>
+                    <div class="category-drop-zone"
+                         :class="{ 'drag-over': dragOverZone === activeCategory }"
+                         @dragover.prevent="dragOverZone = activeCategory"
+                         @dragleave="dragOverZone = null"
+                         @drop.prevent="dropToCategory(activeCategory)">
+                        <span v-for="l in getCategoryLeaders(activeCategory)" :key="l"
+                              class="dropped-leader"
+                              @click="removeFromCategory(activeCategory, l)">
+                            {{ l }} <span class="remove-x">×</span>
+                        </span>
+                        <span v-if="getCategoryLeaders(activeCategory).length === 0" style="color:#5a6a7a;font-size:0.8rem;">点击下方领袖放入此分类，或拖拽领袖到此处</span>
+                    </div>
+                </div>
+                <!-- 领袖网格 -->
+                <div class="leader-grid">
+                    <div v-for="leader in allLeadersFlat" :key="leader"
+                         class="leader-chip"
+                         :class="{ 'in-category': getLeaderCategories(leader).length > 0 }"
+                         :draggable="true"
+                         @dragstart="dragLeader(leader, $event)"
+                         @click="quickToggleLeader(leader)">
+                        <span>{{ leader }}</span>
+                        <span class="lc-cat" v-if="getLeaderCategories(leader).length > 0">
+                            {{ getLeaderCategories(leader).join(', ') }}
+                        </span>
+                        <span class="lc-add" v-if="activeCategory !== 'all'">+</span>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">请先选择地图</div>
+        </div>
+
+        <!-- ===== 笔记 ===== -->
+        <div class="panel full">
+            <div class="panel-title"><span class="icon">📝</span> 战术笔记</div>
+            <div class="notes-area">
+                <textarea v-model="notes" placeholder="在此记录战术思路、BAN选策略、点位优先级..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;justify-content:flex-end;">
+                <button @click="clearNotes" style="background:#3a3f55;border:1px solid #5a6a8a;color:#d0d8e8;padding:8px 20px;border-radius:20px;cursor:pointer;">清空</button>
+                <button @click="saveNotes" style="background:#3a8a5a;border:none;color:white;padding:8px 24px;border-radius:20px;cursor:pointer;font-weight:600;">💾 保存全部</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片查看器 -->
+    <div class="image-modal" v-if="viewerSrc" @click="viewerSrc=''">
+        <span class="close-btn">&times;</span>
+        <img :src="viewerSrc" @click.stop>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
+
+<script>
+// ===== 城邦完整数据 =====
+const CITY_STATE_DATA = {
+    '奥克兰 (Auckland)': { type:'工业', bonus:'公民工作的浅水单元格提供+1生产力。进入工业时代后额外再+1生产力。' },
+    '布鲁塞尔 (Brussels)': { type:'工业', bonus:'城市建造奇观时+15%生产力。' },
+    '布宜诺斯艾利斯 (Buenos Aires)': { type:'工业', bonus:'加成资源像奢侈品资源一样，每种提供1点宜居度。' },
+    '香港 (Hong Kong)': { type:'工业', bonus:'城市项目+20%生产力。' },
+    '约翰内斯堡 (Johannesburg)': { type:'工业', bonus:'城市每拥有一种已改良的资源类型，便+1生产力。研究"工业化"科技后提升至+2生产力。' },
+    '新加坡 (Singapore)': { type:'工业', bonus:'城市每有一条通往其他文明（或外国文明）的贸易路线，便+2生产力。' },
+    '阿卡德 (Akkad)': { type:'军事', bonus:'近战和抗骑兵单位对城墙造成全额伤害。' },
+    '喀布尔 (Kabul)': { type:'军事', bonus:'你的单位从自己发起的战斗中获得双倍经验。' },
+    '纳札加姆 (Ngazargamu)': { type:'军事', bonus:'城市中每个军营区建筑使陆地战斗或支援单位购买费用降低20%。' },
+    '瓦莱塔 (Valletta)': { type:'军事', bonus:'市中心建筑和军营区建筑可用信仰值购买。购买远古、中世纪和文艺复兴城墙的费用降低，但只能使用信仰值购买。' },
+    '沃林 (Wolin)': { type:'军事', bonus:'陆地单位击败敌方单位时获得大将军点数，海军单位击败敌方单位时获得海军统帅点数，点数等于对方战斗力的25%（标准速度下）。' },
+    '那烂陀 (Nalanda)': { type:'科技', bonus:'建造者可建造大寺改良设施。该设施提供科技值、住房，与圣地和学院相邻时有额外加成。' },
+    '哈图沙 (Hattusa)': { type:'科技', bonus:'提供你已揭露但未拥有的每种战略资源每回合2点。' },
+    '塔鲁加 (Taruga)': { type:'科技', bonus:'城市每种拥有的不同改良战略资源，使该城市+5%科技值。' },
+    '卡霍基亚 (Cahokia)': { type:'贸易', bonus:'建造者可建造卡霍基亚土墩改良设施，提供金币、住房和宜居度。' },
+    '斯里巴加湾 (Jakarta)': { type:'贸易', bonus:'您的贸易路线途径的国外贸易站，为该路线额外提供+1金币。' },
+    '马斯喀特 (Muscat)': { type:'贸易', bonus:'拥有商业中心的城市+1宜居度。' },
+    '撒马尔罕 (Samarkand)': { type:'贸易', bonus:'建造者可建造圆顶市集改良设施，提供金币，且国际商路的起始城市每有1个圆顶市集，商路便+1金币。' },
+    '摩加迪沙 (Mogadishu)': { type:'贸易', bonus:'你的商人单位在水域单元格上免疫掠夺。' },
+    '塔那那利佛 (Antananarivo)': { type:'文化', bonus:'每获得一位伟人，文化值提升2%（最高可提升至30%）。' },
+    '库马西 (Kumasi)': { type:'文化', bonus:'通往任何城邦的贸易路线，根据起源城市的专业化区域数量，每个提供+2文化值和+1金币。' },
+    '南马都尔 (Nan Madol)': { type:'文化', bonus:'在海岸或湖泊单元格上或与之相邻的城区提供+2文化值。' },
+    '拉帕努伊 (Rapa Nui)': { type:'文化', bonus:'建造者可建造摩艾石像改良设施，该设施基于相邻的摩艾石像数量提供文化值，研究"飞行"科技后提供旅游业绩。' },
+    '埃里温 (Yerevan)': { type:'宗教', bonus:'你的使徒单位可以从所有可能的晋升中选择，而不是随机获得一个。' },
+    '康提 (Kandy)': { type:'宗教', bonus:'每发现一个自然奇观，获得一个遗物（最多3个）。' },
+    '欣盖提 (Chinguetti)': { type:'宗教', bonus:'国际和国内贸易路线，根据出发城市中信奉您创立的或主流宗教的信徒数量，每位信徒提供+1信仰值。' },
+    '耶路撒冷 (Jerusalem)': { type:'宗教', bonus:'自动追随您创立的宗教，无需传教士的压力转化。' },
+    '梵蒂冈城 (Vatican City)': { type:'宗教', bonus:'激活伟人时，他们会向10格范围内的城市传播400点您创立的（或主流）宗教压力。' }
+};
+
+const LEADER_POOLS = {
+    '非洲大洋洲': ['努比亚','埃及(佩特拉)','埃及(拉美西斯二世)','刚果(姆本巴·恩津加)','刚果(恩津加·姆班德)','马里(曼沙·穆萨)','马里(松迪亚塔·凯塔)','埃塞俄比亚','刚果','澳大利亚','毛利','祖鲁'],
+    '美洲': ['玛雅','阿兹特克','印加','克里','马普切','美国(罗斯福)','美国(林肯)','加拿大','大哥伦比亚','巴西'],
+    '西北欧': ['埃莉诺','高卢','西班牙','挪威','法国','瑞典','苏格兰','葡萄牙','荷兰','英国(维多利亚)','英国(伊丽莎白)'],
+    '中东欧': ['俄罗斯','波兰','德国(巴巴罗萨)','德国(路德维希二世)','匈牙利','希腊(伯利克里)','希腊(戈尔戈)','马其顿','拜占庭(巴兹尔二世)','拜占庭(狄奥多拉)','罗马(图拉真)','罗马(凯撒)'],
+    '中东': ['腓尼基','苏美尔','巴比伦','奥斯曼','波斯(居鲁士)','波斯(纳迪尔沙阿)','阿拉伯','格鲁吉亚','斯基泰'],
+    '东亚': ['中国(秦始皇)','中国(武则天)','中国(朱棣)','忽必烈','朝鲜(善德)','朝鲜(世宗大王)','印度(甘地)','印度(旃陀罗笈多)','印度尼西亚','越南','高棉','日本(北条时宗)','日本(德川家康)','成吉思汗']
+};
+
+const MAP_DATA = {
+    1:{ name:'地中湖', mapUrl:'./maps/01_地中湖/地图.png', pointUrl:'./maps/01_地中湖/点位.png',
+        A1:{ charm:'./maps/01_地中湖/A1/魅力.png', continent:'./maps/01_地中湖/A1/大陆.png', resource:'./maps/01_地中湖/A1/资源.png' },
+        A2:{ charm:'./maps/01_地中湖/A2/魅力.png', continent:'./maps/01_地中湖/A2/大陆.png', resource:'./maps/01_地中湖/A2/资源.png' },
+        A3:{ charm:'./maps/01_地中湖/A3/魅力.png', continent:'./maps/01_地中湖/A3/大陆.png', resource:'./maps/01_地中湖/A3/资源.png' },
+        A4:{ charm:'./maps/01_地中湖/A4/魅力.png', continent:'./maps/01_地中湖/A4/大陆.png', resource:'./maps/01_地中湖/A4/资源.png' },
+        A5:{ charm:'./maps/01_地中湖/A5/魅力.png', continent:'./maps/01_地中湖/A5/大陆.png', resource:'./maps/01_地中湖/A5/资源.png' },
+        cityStates: ['阿卡德 (Akkad)', '塔鲁加 (Taruga)', '布鲁塞尔 (Brussels)', '香港 (Hong Kong)'] },
+    2:{ name:'五大湖', mapUrl:'./maps/02_五大湖/地图.png', pointUrl:'./maps/02_五大湖/点位.png',
+        A1:{ charm:'./maps/02_五大湖/A1/魅力.png', continent:'./maps/02_五大湖/A1/大陆.png', resource:'./maps/02_五大湖/A1/资源.png' },
+        A2:{ charm:'./maps/02_五大湖/A2/魅力.png', continent:'./maps/02_五大湖/A2/大陆.png', resource:'./maps/02_五大湖/A2/资源.png' },
+        A3:{ charm:'./maps/02_五大湖/A3/魅力.png', continent:'./maps/02_五大湖/A3/大陆.png', resource:'./maps/02_五大湖/A3/资源.png' },
+        A4:{ charm:'./maps/02_五大湖/A4/魅力.png', continent:'./maps/02_五大湖/A4/大陆.png', resource:'./maps/02_五大湖/A4/资源.png' },
+        A5:{ charm:'./maps/02_五大湖/A5/魅力.png', continent:'./maps/02_五大湖/A5/大陆.png', resource:'./maps/02_五大湖/A5/资源.png' },
+        cityStates: ['那烂陀 (Nalanda)', '新加坡 (Singapore)', '卡霍基亚 (Cahokia)', '瓦莱塔 (Valletta)'] },
+    3:{ name:'海路协同', mapUrl:'./maps/03_海路协同/地图.png', pointUrl:'./maps/03_海路协同/点位.png',
+        A1:{ charm:'./maps/03_海路协同/A1/魅力.png', continent:'./maps/03_海路协同/A1/大陆.png', resource:'./maps/03_海路协同/A1/资源.png' },
+        A2:{ charm:'./maps/03_海路协同/A2/魅力.png', continent:'./maps/03_海路协同/A2/大陆.png', resource:'./maps/03_海路协同/A2/资源.png' },
+        A3:{ charm:'./maps/03_海路协同/A3/魅力.png', continent:'./maps/03_海路协同/A3/大陆.png', resource:'./maps/03_海路协同/A3/资源.png' },
+        A4:{ charm:'./maps/03_海路协同/A4/魅力.png', continent:'./maps/03_海路协同/A4/大陆.png', resource:'./maps/03_海路协同/A4/资源.png' },
+        A5:{ charm:'./maps/03_海路协同/A5/魅力.png', continent:'./maps/03_海路协同/A5/大陆.png', resource:'./maps/03_海路协同/A5/资源.png' },
+        cityStates: ['那烂陀 (Nalanda)', '南马都尔 (Nan Madol)', '喀布尔 (Kabul)', '撒马尔罕 (Samarkand)', '布宜诺斯艾利斯 (Buenos Aires)', '欣盖提 (Chinguetti)'] },
+    4:{ name:'蒙德', mapUrl:'./maps/04_蒙德/地图.png', pointUrl:'./maps/04_蒙德/点位.png',
+        A1:{ charm:'./maps/04_蒙德/A1/魅力.png', continent:'./maps/04_蒙德/A1/大陆.png', resource:'./maps/04_蒙德/A1/资源.png' },
+        A2:{ charm:'./maps/04_蒙德/A2/魅力.png', continent:'./maps/04_蒙德/A2/大陆.png', resource:'./maps/04_蒙德/A2/资源.png' },
+        A3:{ charm:'./maps/04_蒙德/A3/魅力.png', continent:'./maps/04_蒙德/A3/大陆.png', resource:'./maps/04_蒙德/A3/资源.png' },
+        A4:{ charm:'./maps/04_蒙德/A4/魅力.png', continent:'./maps/04_蒙德/A4/大陆.png', resource:'./maps/04_蒙德/A4/资源.png' },
+        A5:{ charm:'./maps/04_蒙德/A5/魅力.png', continent:'./maps/04_蒙德/A5/大陆.png', resource:'./maps/04_蒙德/A5/资源.png' },
+        cityStates: ['马斯喀特 (Muscat)', '喀布尔 (Kabul)', '哈图沙 (Hattusa)', '奥克兰 (Auckland)'] },
+    5:{ name:'大陆与群岛', mapUrl:'./maps/05_大陆与群岛/地图.png', pointUrl:'./maps/05_大陆与群岛/点位.png',
+        A1:{ charm:'./maps/05_大陆与群岛/A1/魅力.png', continent:'./maps/05_大陆与群岛/A1/大陆.png', resource:'./maps/05_大陆与群岛/A1/资源.png' },
+        A2:{ charm:'./maps/05_大陆与群岛/A2/魅力.png', continent:'./maps/05_大陆与群岛/A2/大陆.png', resource:'./maps/05_大陆与群岛/A2/资源.png' },
+        A3:{ charm:'./maps/05_大陆与群岛/A3/魅力.png', continent:'./maps/05_大陆与群岛/A3/大陆.png', resource:'./maps/05_大陆与群岛/A3/资源.png' },
+        A4:{ charm:'./maps/05_大陆与群岛/A4/魅力.png', continent:'./maps/05_大陆与群岛/A4/大陆.png', resource:'./maps/05_大陆与群岛/A4/资源.png' },
+        A5:{ charm:'./maps/05_大陆与群岛/A5/魅力.png', continent:'./maps/05_大陆与群岛/A5/大陆.png', resource:'./maps/05_大陆与群岛/A5/资源.png' },
+        cityStates: ['阿卡德 (Akkad)', '塔鲁加 (Taruga)', '库马西 (Kumasi)', '香港 (Hong Kong)'] },
+    6:{ name:'济南战役', mapUrl:'./maps/06_济南战役/地图.png', pointUrl:'./maps/06_济南战役/点位.png',
+        A1:{ charm:'./maps/06_济南战役/A1/魅力.png', continent:'./maps/06_济南战役/A1/大陆.png', resource:'./maps/06_济南战役/A1/资源.png' },
+        A2:{ charm:'./maps/06_济南战役/A2/魅力.png', continent:'./maps/06_济南战役/A2/大陆.png', resource:'./maps/06_济南战役/A2/资源.png' },
+        A3:{ charm:'./maps/06_济南战役/A3/魅力.png', continent:'./maps/06_济南战役/A3/大陆.png', resource:'./maps/06_济南战役/A3/资源.png' },
+        A4:{ charm:'./maps/06_济南战役/A4/魅力.png', continent:'./maps/06_济南战役/A4/大陆.png', resource:'./maps/06_济南战役/A4/资源.png' },
+        A5:{ charm:'./maps/06_济南战役/A5/魅力.png', continent:'./maps/06_济南战役/A5/大陆.png', resource:'./maps/06_济南战役/A5/资源.png' },
+        cityStates: ['塔鲁加 (Taruga)', '喀布尔 (Kabul)', '卡霍基亚 (Cahokia)', '南马都尔 (Nan Madol)', '塔那那利佛 (Antananarivo)'] },
+    7:{ name:'枫丹', mapUrl:'./maps/07_枫丹/地图.png', pointUrl:'./maps/07_枫丹/点位.png',
+        A1:{ charm:'./maps/07_枫丹/A1/魅力.png', continent:'./maps/07_枫丹/A1/大陆.png', resource:'./maps/07_枫丹/A1/资源.png' },
+        A2:{ charm:'./maps/07_枫丹/A2/魅力.png', continent:'./maps/07_枫丹/A2/大陆.png', resource:'./maps/07_枫丹/A2/资源.png' },
+        A3:{ charm:'./maps/07_枫丹/A3/魅力.png', continent:'./maps/07_枫丹/A3/大陆.png', resource:'./maps/07_枫丹/A3/资源.png' },
+        A4:{ charm:'./maps/07_枫丹/A4/魅力.png', continent:'./maps/07_枫丹/A4/大陆.png', resource:'./maps/07_枫丹/A4/资源.png' },
+        A5:{ charm:'./maps/07_枫丹/A5/魅力.png', continent:'./maps/07_枫丹/A5/大陆.png', resource:'./maps/07_枫丹/A5/资源.png' },
+        cityStates: ['斯里巴加湾 (Jakarta)', '香港 (Hong Kong)', '纳札加姆 (Ngazargamu)', '哈图沙 (Hattusa)'] },
+    8:{ name:'须弥', mapUrl:'./maps/08_须弥/地图.png', pointUrl:'./maps/08_须弥/点位.png',
+        A1:{ charm:'./maps/08_须弥/A1/魅力.png', continent:'./maps/08_须弥/A1/大陆.png', resource:'./maps/08_须弥/A1/资源.png' },
+        A2:{ charm:'./maps/08_须弥/A2/魅力.png', continent:'./maps/08_须弥/A2/大陆.png', resource:'./maps/08_须弥/A2/资源.png' },
+        A3:{ charm:'./maps/08_须弥/A3/魅力.png', continent:'./maps/08_须弥/A3/大陆.png', resource:'./maps/08_须弥/A3/资源.png' },
+        A4:{ charm:'./maps/08_须弥/A4/魅力.png', continent:'./maps/08_须弥/A4/大陆.png', resource:'./maps/08_须弥/A4/资源.png' },
+        A5:{ charm:'./maps/08_须弥/A5/魅力.png', continent:'./maps/08_须弥/A5/大陆.png', resource:'./maps/08_须弥/A5/资源.png' },
+        cityStates: ['沃林 (Wolin)', '欣盖提 (Chinguetti)', '马斯喀特 (Muscat)'] },
+    9:{ name:'璃月', mapUrl:'./maps/09_璃月/地图.png', pointUrl:'./maps/09_璃月/点位.png',
+        A1:{ charm:'./maps/09_璃月/A1/魅力.png', continent:'./maps/09_璃月/A1/大陆.png', resource:'./maps/09_璃月/A1/资源.png' },
+        A2:{ charm:'./maps/09_璃月/A2/魅力.png', continent:'./maps/09_璃月/A2/大陆.png', resource:'./maps/09_璃月/A2/资源.png' },
+        A3:{ charm:'./maps/09_璃月/A3/魅力.png', continent:'./maps/09_璃月/A3/大陆.png', resource:'./maps/09_璃月/A3/资源.png' },
+        A4:{ charm:'./maps/09_璃月/A4/魅力.png', continent:'./maps/09_璃月/A4/大陆.png', resource:'./maps/09_璃月/A4/资源.png' },
+        A5:{ charm:'./maps/09_璃月/A5/魅力.png', continent:'./maps/09_璃月/A5/大陆.png', resource:'./maps/09_璃月/A5/资源.png' },
+        cityStates: ['阿卡德 (Akkad)', '塔鲁加 (Taruga)', '香港 (Hong Kong)', '喀布尔 (Kabul)', '耶路撒冷 (Jerusalem)', '塔那那利佛 (Antananarivo)'] },
+    10:{ name:'亚特兰蒂斯', mapUrl:'./maps/10_亚特兰蒂斯/地图.png', pointUrl:'./maps/10_亚特兰蒂斯/点位.png',
+        A1:{ charm:'./maps/10_亚特兰蒂斯/A1/魅力.png', continent:'./maps/10_亚特兰蒂斯/A1/大陆.png', resource:'./maps/10_亚特兰蒂斯/A1/资源.png' },
+        A2:{ charm:'./maps/10_亚特兰蒂斯/A2/魅力.png', continent:'./maps/10_亚特兰蒂斯/A2/大陆.png', resource:'./maps/10_亚特兰蒂斯/A2/资源.png' },
+        A3:{ charm:'./maps/10_亚特兰蒂斯/A3/魅力.png', continent:'./maps/10_亚特兰蒂斯/A3/大陆.png', resource:'./maps/10_亚特兰蒂斯/A3/资源.png' },
+        A4:{ charm:'./maps/10_亚特兰蒂斯/A4/魅力.png', continent:'./maps/10_亚特兰蒂斯/A4/大陆.png', resource:'./maps/10_亚特兰蒂斯/A4/资源.png' },
+        A5:{ charm:'./maps/10_亚特兰蒂斯/A5/魅力.png', continent:'./maps/10_亚特兰蒂斯/A5/大陆.png', resource:'./maps/10_亚特兰蒂斯/A5/资源.png' },
+        cityStates: ['撒马尔罕 (Samarkand)', '那烂陀 (Nalanda)', '沃林 (Wolin)', '布宜诺斯艾利斯 (Buenos Aires)', '欣盖提 (Chinguetti)', '香港 (Hong Kong)', '南马都尔 (Nan Madol)', '奥克兰 (Auckland)', '库马西 (Kumasi)', '埃里温 (Yerevan)', '瓦莱塔 (Valletta)', '塔鲁加 (Taruga)'] },
+    11:{ name:'双龙戏珠', mapUrl:'./maps/11_双龙戏珠/地图.png', pointUrl:'./maps/11_双龙戏珠/点位.png',
+        A1:{ charm:'./maps/11_双龙戏珠/A1/魅力.png', continent:'./maps/11_双龙戏珠/A1/大陆.png', resource:'./maps/11_双龙戏珠/A1/资源.png' },
+        A2:{ charm:'./maps/11_双龙戏珠/A2/魅力.png', continent:'./maps/11_双龙戏珠/A2/大陆.png', resource:'./maps/11_双龙戏珠/A2/资源.png' },
+        A3:{ charm:'./maps/11_双龙戏珠/A3/魅力.png', continent:'./maps/11_双龙戏珠/A3/大陆.png', resource:'./maps/11_双龙戏珠/A3/资源.png' },
+        A4:{ charm:'./maps/11_双龙戏珠/A4/魅力.png', continent:'./maps/11_双龙戏珠/A4/大陆.png', resource:'./maps/11_双龙戏珠/A4/资源.png' },
+        A5:{ charm:'./maps/11_双龙戏珠/A5/魅力.png', continent:'./maps/11_双龙戏珠/A5/大陆.png', resource:'./maps/11_双龙戏珠/A5/资源.png' },
+        cityStates: ['撒马尔罕 (Samarkand)', '那烂陀 (Nalanda)', '喀布尔 (Kabul)', '阿卡德 (Akkad)', '沃林 (Wolin)', '布宜诺斯艾利斯 (Buenos Aires)', '康提 (Kandy)', '欣盖提 (Chinguetti)', '香港 (Hong Kong)', '南马都尔 (Nan Madol)'] },
+    12:{ name:'哈基米大陆', mapUrl:'./maps/12_哈基米大陆/地图.png', pointUrl:'./maps/12_哈基米大陆/点位.png',
+        A1:{ charm:'./maps/12_哈基米大陆/A1/魅力.png', continent:'./maps/12_哈基米大陆/A1/大陆.png', resource:'./maps/12_哈基米大陆/A1/资源.png' },
+        A2:{ charm:'./maps/12_哈基米大陆/A2/魅力.png', continent:'./maps/12_哈基米大陆/A2/大陆.png', resource:'./maps/12_哈基米大陆/A2/资源.png' },
+        A3:{ charm:'./maps/12_哈基米大陆/A3/魅力.png', continent:'./maps/12_哈基米大陆/A3/大陆.png', resource:'./maps/12_哈基米大陆/A3/资源.png' },
+        A4:{ charm:'./maps/12_哈基米大陆/A4/魅力.png', continent:'./maps/12_哈基米大陆/A4/大陆.png', resource:'./maps/12_哈基米大陆/A4/资源.png' },
+        A5:{ charm:'./maps/12_哈基米大陆/A5/魅力.png', continent:'./maps/12_哈基米大陆/A5/大陆.png', resource:'./maps/12_哈基米大陆/A5/资源.png' },
+        cityStates: ['约翰内斯堡 (Johannesburg)', '撒马尔罕 (Samarkand)', '南马都尔 (Nan Madol)', '沃林 (Wolin)', '那烂陀 (Nalanda)', '塔鲁加 (Taruga)', '瓦莱塔 (Valletta)', '阿卡德 (Akkad)', '布宜诺斯艾利斯 (Buenos Aires)', '香港 (Hong Kong)'] },
+    13:{ name:'各自为政', mapUrl:'./maps/13_各自为政/地图.png', pointUrl:'./maps/13_各自为政/点位.png',
+        A1:{ charm:'./maps/13_各自为政/A1/魅力.png', continent:'./maps/13_各自为政/A1/大陆.png', resource:'./maps/13_各自为政/A1/资源.png' },
+        A2:{ charm:'./maps/13_各自为政/A2/魅力.png', continent:'./maps/13_各自为政/A2/大陆.png', resource:'./maps/13_各自为政/A2/资源.png' },
+        A3:{ charm:'./maps/13_各自为政/A3/魅力.png', continent:'./maps/13_各自为政/A3/大陆.png', resource:'./maps/13_各自为政/A3/资源.png' },
+        A4:{ charm:'./maps/13_各自为政/A4/魅力.png', continent:'./maps/13_各自为政/A4/大陆.png', resource:'./maps/13_各自为政/A4/资源.png' },
+        A5:{ charm:'./maps/13_各自为政/A5/魅力.png', continent:'./maps/13_各自为政/A5/大陆.png', resource:'./maps/13_各自为政/A5/资源.png' },
+        cityStates: ['斯里巴加湾 (Jakarta)', '奥克兰 (Auckland)', '库马西 (Kumasi)', '拉帕努伊 (Rapa Nui)', '那烂陀 (Nalanda)', '埃里温 (Yerevan)', '沃林 (Wolin)'] },
+    14:{ name:'北极点', mapUrl:'./maps/14_北极点/地图.png', pointUrl:'./maps/14_北极点/点位.png',
+        A1:{ charm:'./maps/14_北极点/A1/魅力.png', continent:'./maps/14_北极点/A1/大陆.png', resource:'./maps/14_北极点/A1/资源.png' },
+        A2:{ charm:'./maps/14_北极点/A2/魅力.png', continent:'./maps/14_北极点/A2/大陆.png', resource:'./maps/14_北极点/A2/资源.png' },
+        A3:{ charm:'./maps/14_北极点/A3/魅力.png', continent:'./maps/14_北极点/A3/大陆.png', resource:'./maps/14_北极点/A3/资源.png' },
+        A4:{ charm:'./maps/14_北极点/A4/魅力.png', continent:'./maps/14_北极点/A4/大陆.png', resource:'./maps/14_北极点/A4/资源.png' },
+        A5:{ charm:'./maps/14_北极点/A5/魅力.png', continent:'./maps/14_北极点/A5/大陆.png', resource:'./maps/14_北极点/A5/资源.png' },
+        cityStates: ['欣盖提 (Chinguetti)', '沃林 (Wolin)', '新加坡 (Singapore)', '布鲁塞尔 (Brussels)', '梵蒂冈城 (Vatican City)', '撒马尔罕 (Samarkand)', '那烂陀 (Nalanda)'] },
+    15:{ name:'心岛', mapUrl:'./maps/15_心岛/地图.png', pointUrl:'./maps/15_心岛/点位.png',
+        A1:{ charm:'./maps/15_心岛/A1/魅力.png', continent:'./maps/15_心岛/A1/大陆.png', resource:'./maps/15_心岛/A1/资源.png' },
+        A2:{ charm:'./maps/15_心岛/A2/魅力.png', continent:'./maps/15_心岛/A2/大陆.png', resource:'./maps/15_心岛/A2/资源.png' },
+        A3:{ charm:'./maps/15_心岛/A3/魅力.png', continent:'./maps/15_心岛/A3/大陆.png', resource:'./maps/15_心岛/A3/资源.png' },
+        A4:{ charm:'./maps/15_心岛/A4/魅力.png', continent:'./maps/15_心岛/A4/大陆.png', resource:'./maps/15_心岛/A4/资源.png' },
+        A5:{ charm:'./maps/15_心岛/A5/魅力.png', continent:'./maps/15_心岛/A5/大陆.png', resource:'./maps/15_心岛/A5/资源.png' },
+        cityStates: ['南马都尔 (Nan Madol)', '塔那那利佛 (Antananarivo)', '康提 (Kandy)', '埃里温 (Yerevan)', '塔鲁加 (Taruga)', '摩加迪沙 (Mogadishu)', '沃林 (Wolin)', '香港 (Hong Kong)', '喀布尔 (Kabul)', '奥克兰 (Auckland)'] }
+};
+
+new Vue({
+    el: '#app',
+    data: {
+        MAP_DATA,
+        cityStateData: CITY_STATE_DATA,
+        selectedMapId: null,
+        mapData: {},
+        mapView: 'overview',
+        activePoint: null,
+        points: ['A1','A2','A3','A4','A5'],
+        pointRatings: {},
+        notes: '',
+        viewerSrc: '',
+        // 绘图
+        tool: 'pen',
+        activeColor: 'red',
+        lineWidth: 3,
+        colors: ['red','blue','green','yellow','white','orange'],
+        isDrawing: false,
+        lastX: 0,
+        lastY: 0,
+        drawHistory: [],
+        currentStrokes: [],
+        // 领袖分类
+        customCategories: [],
+        activeCategory: 'all',
+        showAddCategory: false,
+        newCategoryName: '',
+        leaderCategoryMap: {},
+        dragOverZone: null,
+        draggedLeader: null
+    },
+    computed: {
+        mapIdList() { return Object.keys(MAP_DATA).map(Number).sort((a,b)=>a-b); },
+        mapCityStates() {
+            if (!this.selectedMapId || !MAP_DATA[this.selectedMapId]) return [];
+            return MAP_DATA[this.selectedMapId].cityStates || [];
+        },
+        allLeadersFlat() {
+            const set = new Set();
+            Object.values(LEADER_POOLS).forEach(arr => arr.forEach(l => set.add(l)));
+            return [...set].sort();
+        }
+    },
+    methods: {
+        // ===== 数据加载 =====
+        loadMap() {
+            if (!this.selectedMapId) { this.mapData = {}; this.activePoint = null; return; }
+            this.mapData = MAP_DATA[this.selectedMapId] || {};
+            this.activePoint = null;
+            this.mapView = 'overview';
+            const key = 'tactics_data_' + this.selectedMapId;
+            const saved = localStorage.getItem(key);
+            let savedData = {};
+            if (saved) { try { savedData = JSON.parse(saved); } catch(e) {} }
+            this.pointRatings = savedData.pointRatings || {};
+            this.notes = savedData.notes || '';
+            this.customCategories = savedData.customCategories || ['自爆位','海战位','打钱位','发育位'];
+            this.leaderCategoryMap = savedData.leaderCategoryMap || {};
+            this.currentStrokes = savedData.strokes || [];
+            this.drawHistory = [JSON.parse(JSON.stringify(this.currentStrokes))];
+            this.activeCategory = 'all';
+            this.$nextTick(() => { this.initCanvas(); });
+        },
+        saveAllData() {
+            if (!this.selectedMapId) return;
+            const key = 'tactics_data_' + this.selectedMapId;
+            const data = {
+                pointRatings: this.pointRatings,
+                notes: this.notes,
+                customCategories: this.customCategories,
+                leaderCategoryMap: this.leaderCategoryMap,
+                strokes: this.currentStrokes
+            };
+            localStorage.setItem(key, JSON.stringify(data));
+        },
+        getPointRating(pt) { return this.pointRatings[pt] || 0; },
+        getCsType(cs) { return CITY_STATE_DATA[cs] ? CITY_STATE_DATA[cs].type : null; },
+        viewImage(src) { if (src) this.viewerSrc = src; },
+        saveNotes() { this.saveAllData(); alert('全部数据已保存！'); },
+        clearNotes() { if (confirm('确定清空笔记？')) { this.notes = ''; this.saveAllData(); } },
+
+        // ===== Canvas 绘图 =====
+        initCanvas() {
+            const canvas = this.$refs.drawCanvas;
+            const img = this.$refs.mapImg;
+            if (!canvas || !img) return;
+            // 用图片实际显示尺寸
+            const rect = img.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            this.redrawCanvas();
+        },
+        redrawCanvas() {
+            const canvas = this.$refs.drawCanvas;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            this.currentStrokes.forEach(s => {
+                ctx.save();
+                if (s.type === 'text') {
+                    ctx.font = `bold ${s.lineWidth * 4}px 'Microsoft YaHei'`;
+                    ctx.fillStyle = s.color;
+                    ctx.fillText(s.text, s.x1, s.y1);
+                } else {
+                    ctx.strokeStyle = s.type === 'eraser' ? '#1a1e2a' : s.color;
+                    ctx.lineWidth = s.type === 'eraser' ? s.lineWidth * 3 : s.lineWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(s.x1, s.y1);
+                    ctx.lineTo(s.x2, s.y2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            });
+        },
+        getCanvasPos(e) {
+            const canvas = this.$refs.drawCanvas;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        },
+        startDraw(e) {
+            if (this.tool === 'text') {
+                const pos = this.getCanvasPos(e);
+                const text = prompt('输入文字：');
+                if (text) {
+                    this.currentStrokes.push({ type:'text', text, x1:pos.x, y1:pos.y, color:this.activeColor, lineWidth:this.lineWidth });
+                    this.trimHistory();
+                    this.redrawCanvas();
+                    this.saveAllData();
+                }
+                return;
+            }
+            this.isDrawing = true;
+            const pos = this.getCanvasPos(e);
+            this.lastX = pos.x;
+            this.lastY = pos.y;
+        },
+        draw(e) {
+            if (!this.isDrawing) return;
+            const pos = this.getCanvasPos(e);
+            this.currentStrokes.push({
+                type: this.tool,
+                x1: this.lastX, y1: this.lastY,
+                x2: pos.x, y2: pos.y,
+                color: this.activeColor,
+                lineWidth: this.lineWidth
+            });
+            this.lastX = pos.x;
+            this.lastY = pos.y;
+            this.redrawCanvas();
+        },
+        stopDraw() {
+            if (!this.isDrawing) return;
+            this.isDrawing = false;
+            this.trimHistory();
+            this.saveAllData();
+        },
+        startTouch(e) {
+            if (this.tool === 'text') {
+                const pos = this.getCanvasPos(e.touches[0]);
+                const text = prompt('输入文字：');
+                if (text) {
+                    this.currentStrokes.push({ type:'text', text, x1:pos.x, y1:pos.y, color:this.activeColor, lineWidth:this.lineWidth });
+                    this.trimHistory();
+                    this.redrawCanvas();
+                    this.saveAllData();
+                }
+                return;
+            }
+            this.isDrawing = true;
+            const pos = this.getCanvasPos(e.touches[0]);
+            this.lastX = pos.x;
+            this.lastY = pos.y;
+        },
+        drawTouch(e) {
+            if (!this.isDrawing) return;
+            const pos = this.getCanvasPos(e.touches[0]);
+            this.currentStrokes.push({
+                type: this.tool,
+                x1: this.lastX, y1: this.lastY,
+                x2: pos.x, y2: pos.y,
+                color: this.activeColor,
+                lineWidth: this.lineWidth
+            });
+            this.lastX = pos.x;
+            this.lastY = pos.y;
+            this.redrawCanvas();
+        },
+        trimHistory() {
+            this.drawHistory.push(JSON.parse(JSON.stringify(this.currentStrokes)));
+            if (this.drawHistory.length > 50) this.drawHistory.shift();
+        },
+        undoDraw() {
+            if (this.drawHistory.length > 1) {
+                this.drawHistory.pop();
+                this.currentStrokes = JSON.parse(JSON.stringify(this.drawHistory[this.drawHistory.length - 1]));
+                this.redrawCanvas();
+                this.saveAllData();
+            }
+        },
+        clearCanvas() {
+            if (confirm('确定清除所有地图标记？此操作不可恢复。')) {
+                this.currentStrokes = [];
+                this.drawHistory = [[]];
+                this.redrawCanvas();
+                this.saveAllData();
+            }
+        },
+
+        // ===== 领袖分类 =====
+        addCategory() {
+            const name = this.newCategoryName.trim();
+            if (!name) return;
+            if (this.customCategories.includes(name)) { alert('分类已存在'); return; }
+            this.customCategories.push(name);
+            this.$set(this.leaderCategoryMap, name, []);
+            this.newCategoryName = '';
+            this.showAddCategory = false;
+            this.saveAllData();
+        },
+        deleteCategory(cat) {
+            if (confirm(`确定删除分类"${cat}"？`)) {
+                const idx = this.customCategories.indexOf(cat);
+                if (idx > -1) this.customCategories.splice(idx, 1);
+                this.$delete(this.leaderCategoryMap, cat);
+                if (this.activeCategory === cat) this.activeCategory = 'all';
+                this.saveAllData();
+            }
+        },
+        getCategoryLeaders(cat) {
+            return this.leaderCategoryMap[cat] || [];
+        },
+        getLeaderCategories(leader) {
+            const cats = [];
+            for (const [cat, leaders] of Object.entries(this.leaderCategoryMap)) {
+                if (leaders && leaders.includes(leader)) cats.push(cat);
+            }
+            return cats;
+        },
+        addToCategory(cat, leader) {
+            if (!this.leaderCategoryMap[cat]) this.$set(this.leaderCategoryMap, cat, []);
+            if (!this.leaderCategoryMap[cat].includes(leader)) {
+                this.leaderCategoryMap[cat].push(leader);
+                this.saveAllData();
+            }
+        },
+        removeFromCategory(cat, leader) {
+            if (this.leaderCategoryMap[cat]) {
+                const idx = this.leaderCategoryMap[cat].indexOf(leader);
+                if (idx > -1) {
+                    this.leaderCategoryMap[cat].splice(idx, 1);
+                    this.saveAllData();
+                }
+            }
+        },
+        quickToggleLeader(leader) {
+            if (this.activeCategory === 'all') return;
+            const cat = this.activeCategory;
+            if (this.getCategoryLeaders(cat).includes(leader)) {
+                this.removeFromCategory(cat, leader);
+            } else {
+                this.addToCategory(cat, leader);
+            }
+        },
+        dragLeader(leader, e) {
+            this.draggedLeader = leader;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', leader);
+        },
+        dropToCategory(cat) {
+            this.dragOverZone = null;
+            if (this.draggedLeader) {
+                this.addToCategory(cat, this.draggedLeader);
+                this.draggedLeader = null;
+            }
+        }
+    },
+    watch: {
+        pointRatings: { deep: true, handler() { this.saveAllData(); } },
+        mapView() { this.$nextTick(() => { this.initCanvas(); }); }
+    }
+});
+</script>
+</body>
+</html>
